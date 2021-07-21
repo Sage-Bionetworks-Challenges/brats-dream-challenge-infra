@@ -5,6 +5,7 @@ import getpass
 import os
 import tarfile
 import time
+import glob
 
 import docker
 import synapseclient
@@ -29,7 +30,7 @@ def store_log_file(syn, log_filename, parentid, store=True):
         if not store:
             try:
                 syn.store(ent)
-            except synapseclient.exceptions.SynapseHTTPError as err:
+            except synapseclient.core.exceptions.SynapseHTTPError as err:
                 print(err)
 
 
@@ -108,7 +109,7 @@ def main(syn, args):
     # These are the locations on the docker that you want your mounted
     # volumes to be + permissions in docker (ro, rw)
     # It has to be in this format '/output:rw'
-    mounted_volumes = {output_dir: '/output:rw',
+    mounted_volumes = {output_dir: '/data/results:rw',
                        input_dir: '/data:ro'}
     # All mounted volumes here in a list
     all_volumes = [output_dir, input_dir]
@@ -177,10 +178,10 @@ def main(syn, args):
 
     output_folder = os.listdir(output_dir)
     if not output_folder:
-        raise Exception("No 'predictions.csv' file written to /output, "
+        raise Exception("No '*.nii.gz' file written to /data/results, "
                         "please check inference docker")
-    elif "predictions.csv" not in output_folder:
-        raise Exception("No 'predictions.csv' file written to /output, "
+    elif not glob.glob(f"{output_folder}/*.nii.gz"):
+        raise Exception("No '*.nii.gz' file written to /data/results, "
                         "please check inference docker")
     # CWL has a limit of the array of files it can accept in a folder
     # therefore creating a tarball is sometimes necessary
