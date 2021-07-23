@@ -3,6 +3,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install --no-install-recommends --yes \
   python3 \
+  python3-pip \
 	wget
 WORKDIR /
 
@@ -13,5 +14,8 @@ RUN chmod +x CaPTk_1.8.1_Installer_centos7.bin
 RUN ./CaPTk_1.8.1_Installer_centos7.bin
 RUN rm CaPTk_1.8.1_Installer_centos7.bin
 
-COPY validate.py /validate.py
-COPY score.py /score.py
+# Download nibabel package for validation
+RUN pip3 install nibabel
+
+COPY validate.py /usr/local/bin/validate.py
+COPY score.py /usr/local/bin/score.py

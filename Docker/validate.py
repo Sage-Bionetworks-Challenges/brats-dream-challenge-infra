@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Validation script for Task 1.
 
 Predictions file must be a NIfTI file (*.nii.gz), where filename must
