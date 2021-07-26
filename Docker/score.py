@@ -23,14 +23,20 @@ def get_args():
                         type=str, required=True)
     parser.add_argument("-o", "--output",
                         type=str, default="results.json")
+    parser.add_argument("-c", "--captk_path",
+                        type=str, required=True)
     parser.add_argument("-t", "--tmp",
                         type=str, default="tmp_results.csv")
     return parser.parse_args()
 
 
-def run_captk(pred, gold, tmp):
+def run_captk(path_to_captk, pred, gold, tmp):
+    """
+    Run BraTS Similarity Metrics computation of prediction scan
+    against goldstandard.
+    """
     cmd = [
-        "/Applications/CaPTk_1.8.1.app/Contents/Resources/bin/Utilities",
+        path_to_captk,
         "-i", pred,
         "-lsb", gold,
         "-o", tmp
@@ -39,6 +45,14 @@ def run_captk(pred, gold, tmp):
 
 
 def extract_metrics(res, region):
+    """Find and return the metrics of interest.
+
+    Metrics wanted:
+      - Dice score
+      - Hausdorff distance
+      - specificity
+      - sensitivity
+    """
     scores = re.search(f"{region}.*", res).group().split(",")
     dice = scores[2]
     haus = scores[5]
@@ -51,6 +65,7 @@ def extract_metrics(res, region):
 
 
 def get_scores(tmp):
+    """Get scores for three regions: ET, WT, and TC."""
     with open(tmp) as f:
         res = f.read()
         et_scores = extract_metrics(res, "ET")
@@ -60,8 +75,10 @@ def get_scores(tmp):
 
 
 def main():
+    """Main function."""
     args = get_args()
-    run_captk(args.predictions_file, args.goldstandard_file, args.tmp)
+    run_captk(args.captk_path, args.predictions_file,
+              args.goldstandard_file, args.tmp)
     results = get_scores(args.tmp)
     os.remove(args.tmp)  # Remove file, as it's no longer needed
 

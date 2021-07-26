@@ -4,7 +4,6 @@
 Predictions file must be a NIfTI file (*.nii.gz), where filename must
 match with the goldstandard's naming format.
 """
-import os
 import argparse
 import json
 
@@ -24,11 +23,15 @@ def get_args():
 
 
 def validate_img(img):
-    """Validate image file."""
+    """Validate image file.
+
+    TODO: add validation checks.
+    """
     return []
 
 
 def main():
+    """Main function."""
     args = get_args()
 
     invalid_reasons = []
