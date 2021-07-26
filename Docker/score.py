@@ -12,6 +12,7 @@ import re
 import subprocess
 import argparse
 import json
+import zipfile
 
 
 def get_args():
@@ -28,6 +29,16 @@ def get_args():
     parser.add_argument("-t", "--tmp",
                         type=str, default="tmp_results.csv")
     return parser.parse_args()
+
+
+def unzip_file(z, pred):
+    """Unzip groundtruth file that corresponds to prediction file."""
+    scan_number = re.search(r"_(\d{3}).nii.gz$", pred).group(1)
+    with zipfile.ZipFile(z) as zip_ref:
+        zipped_file = [f for f in zip_ref.namelist()
+                       if f.endswith(f"{scan_number}_seg.nii.gz")][0]
+        filepath = zip_ref.extract(zipped_file, ".")
+    return filepath
 
 
 def run_captk(path_to_captk, pred, gold, tmp):
@@ -77,8 +88,11 @@ def get_scores(tmp):
 def main():
     """Main function."""
     args = get_args()
-    run_captk(args.captk_path, args.predictions_file,
-              args.goldstandard_file, args.tmp)
+    pred = args.predictions_file
+    gold = unzip_file(args.goldstandard_file, pred)
+
+    run_captk(args.captk_path, pred,
+              gold, args.tmp)
     results = get_scores(args.tmp)
     os.remove(args.tmp)  # Remove file, as it's no longer needed
 
