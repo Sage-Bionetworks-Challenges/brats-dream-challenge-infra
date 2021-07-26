@@ -8,7 +8,7 @@ baseCommand: score.py
 
 hints:
   DockerRequirement:
-    dockerPull: docker.synapse.org/syn25829070/scoring:v1
+    dockerPull: docker.synapse.org/syn25829070/scoring:v2
 
 inputs:
   - id: input_file
@@ -23,6 +23,8 @@ arguments:
     prefix: -p
   - valueFrom: $(inputs.goldstandard.path)
     prefix: -g
+  - valueFrom: "/work/CaPTk/bin/Utilities"
+    prefix: -c
   - valueFrom: results.json
     prefix: -o
 
@@ -35,61 +37,89 @@ outputs:
     outputBinding:
       glob: results.json
 
-  - id: primary_metric
+  - id: Dice_ET
     type: string
     outputBinding:
       glob: results.json
       loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['primary_metric'])
+      outputEval: $(JSON.parse(self[0].contents)['Dice_ET'])
 
-  - id: primary_metric_value
-    type: double
-    outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['primary_metric_value'])
-
-  - id: secondary_metric
+  - id: Dice_WT
     type: string
     outputBinding:
       glob: results.json
       loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['secondary_metric'])
+      outputEval: $(JSON.parse(self[0].contents)['Dice_WT'])
 
-  - id: secondary_metric_value
-    type: double
-    outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['secondary_metric_value'])
-
-  - id: other_metric1
+  - id: Dice_TC
     type: string
     outputBinding:
       glob: results.json
       loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['other_metric1'])
+      outputEval: $(JSON.parse(self[0].contents)['Dice_TC'])
 
-  - id: other_metric_value1
-    type: double
-    outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['other_metric_value1'])
-
-  - id: other_metric2
+  - id: Hausdorff95_ET
     type: string
     outputBinding:
       glob: results.json
       loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['other_metric2'])
+      outputEval: $(JSON.parse(self[0].contents)['Hausdorff95_ET'])
 
-  - id: other_metric_value2
-    type: double
+  - id: Hausdorff95_WT
+    type: string
     outputBinding:
       glob: results.json
       loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['other_metric_value2'])
+      outputEval: $(JSON.parse(self[0].contents)['Hausdorff95_WT'])
+
+  - id: Hausdorff95_TC
+    type: string
+    outputBinding:
+      glob: results.json
+      loadContents: true
+      outputEval: $(JSON.parse(self[0].contents)['Hausdorff95_TC'])
+
+  - id: Sensitivity_ET
+    type: string
+    outputBinding:
+      glob: results.json
+      loadContents: true
+      outputEval: $(JSON.parse(self[0].contents)['Sensitivity_ET'])
+
+  - id: Sensitivity_WT
+    type: string
+    outputBinding:
+      glob: results.json
+      loadContents: true
+      outputEval: $(JSON.parse(self[0].contents)['Sensitivity_WT'])
+
+  - id: Sensitivity_TC
+    type: string
+    outputBinding:
+      glob: results.json
+      loadContents: true
+      outputEval: $(JSON.parse(self[0].contents)['Sensitivity_TC'])
+
+  - id: Specificity_ET
+    type: string
+    outputBinding:
+      glob: results.json
+      loadContents: true
+      outputEval: $(JSON.parse(self[0].contents)['Specificity_ET'])
+
+  - id: Specificity_WT
+    type: string
+    outputBinding:
+      glob: results.json
+      loadContents: true
+      outputEval: $(JSON.parse(self[0].contents)['Specificity_WT'])
+
+  - id: Specificity_TC
+    type: string
+    outputBinding:
+      glob: results.json
+      loadContents: true
+      outputEval: $(JSON.parse(self[0].contents)['Specificity_TC'])
 
   - id: status
     type: string
