@@ -67,10 +67,10 @@ def extract_metrics(res, region):
       - sensitivity
     """
     scores = res.loc[region]
-    dice = scores["Dice"]
-    haus = scores["Hausdorff95"]
-    sens = scores["Sensitivity"]
-    spec = scores["Specificity"]
+    dice = scores.get("Dice", "NA")
+    haus = scores.get("Hausdorff95", "NA")
+    sens = scores.get("Sensitivity", "NA")
+    spec = scores.get("Specificity", "NA")
     return {
         f"Dice_{region}": dice, f"Hausdorff95_{region}": haus,
         f"Sensitivity_{region}": sens, f"Specificity_{region}": spec
