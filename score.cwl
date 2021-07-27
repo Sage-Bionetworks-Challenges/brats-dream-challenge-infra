@@ -23,7 +23,7 @@ arguments:
     prefix: -p
   - valueFrom: $(inputs.goldstandard.path)
     prefix: -g
-  - valueFrom: "/work/CaPTk/bin/Utilities"
+  - valueFrom: "/work/CaPTk"
     prefix: -c
   - valueFrom: results.json
     prefix: -o

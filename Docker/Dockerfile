@@ -1,7 +1,7 @@
 FROM cbica/captk:release-1.8.1
 
 # Download nibabel package for validation
-RUN pip install nibabel
+RUN pip install pandas nibabel
 
 COPY validate.py /usr/local/bin/.
 COPY score.py /usr/local/bin/.

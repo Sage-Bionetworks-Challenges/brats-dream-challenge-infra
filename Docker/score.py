@@ -14,6 +14,8 @@ import argparse
 import json
 import zipfile
 
+import pandas as pd
+
 
 def get_args():
     """Set up command-line interface and get arguments."""
@@ -47,9 +49,9 @@ def run_captk(path_to_captk, pred, gold, tmp):
     against goldstandard.
     """
     cmd = [
-        path_to_captk,
-        "-i", pred,
-        "-lsb", gold,
+        os.path.join(path_to_captk, "bin/Utilities"),
+        "-i", gold,
+        "-lsb", pred,
         "-o", tmp
     ]
     subprocess.check_call(cmd)
@@ -64,11 +66,11 @@ def extract_metrics(res, region):
       - specificity
       - sensitivity
     """
-    scores = re.search(f"{region}.*", res).group().split(",")
-    dice = scores[2]
-    haus = scores[5]
-    sens = scores[7]
-    spec = scores[9]
+    scores = res.loc[region]
+    dice = scores["Dice"]
+    haus = scores["Hausdorff95"]
+    sens = scores["Sensitivity"]
+    spec = scores["Specificity"]
     return {
         f"Dice_{region}": dice, f"Hausdorff95_{region}": haus,
         f"Sensitivity_{region}": sens, f"Specificity_{region}": spec
@@ -77,12 +79,11 @@ def extract_metrics(res, region):
 
 def get_scores(tmp):
     """Get scores for three regions: ET, WT, and TC."""
-    with open(tmp) as f:
-        res = f.read()
-        et_scores = extract_metrics(res, "ET")
-        wt_scores = extract_metrics(res, "WT")
-        tc_scores = extract_metrics(res, "TC")
-        return {**et_scores, **wt_scores, **tc_scores}
+    res = pd.read_csv(tmp, index_col="Labels")
+    et_scores = extract_metrics(res, "ET")
+    wt_scores = extract_metrics(res, "WT")
+    tc_scores = extract_metrics(res, "TC")
+    return {**et_scores, **wt_scores, **tc_scores}
 
 
 def main():
