@@ -9,8 +9,6 @@ import json
 import tarfile
 import zipfile
 
-import nibabel as nib
-
 
 def get_args():
     """Set up command-line interface and get arguments."""
