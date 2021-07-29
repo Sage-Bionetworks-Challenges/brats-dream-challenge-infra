@@ -14,7 +14,7 @@ inputs:
   - id: parent_id
     type: string
   - id: synapse_config
-    type: string
+    type: File
   - id: input_file
     type: File
   - id: goldstandard
@@ -24,9 +24,9 @@ inputs:
 
 arguments:
   - valueFrom: $(inputs.parent_id)
-    prefix: --parentid
+    prefix: --parent_id
   - valueFrom: $(inputs.synapse_config.path)
-    prefix: -c
+    prefix: -s
   - valueFrom: $(inputs.input_file.path)
     prefix: -p
   - valueFrom: $(inputs.goldstandard.path)
