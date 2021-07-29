@@ -12,14 +12,20 @@ import re
 import subprocess
 import argparse
 import json
+import tarfile
 import zipfile
 
 import pandas as pd
+import synapseclient
 
 
 def get_args():
     """Set up command-line interface and get arguments."""
     parser = argparse.ArgumentParser()
+    parser.add_argument("--parent_id",
+                        type=str, required=True)
+    parser.add_argument("-s", "--synapse_config",
+                        type=str, required=True)
     parser.add_argument("-p", "--predictions_file",
                         type=str, required=True)
     parser.add_argument("-g", "--goldstandard_file",
@@ -28,19 +34,20 @@ def get_args():
                         type=str, default="results.json")
     parser.add_argument("-c", "--captk_path",
                         type=str, required=True)
-    parser.add_argument("-t", "--tmp",
-                        type=str, default="tmp_results.csv")
     return parser.parse_args()
 
 
-def unzip_file(z, pred):
-    """Unzip groundtruth file that corresponds to prediction file."""
-    scan_number = re.search(r"_(\d{3}).nii.gz$", pred).group(1)
-    with zipfile.ZipFile(z) as zip_ref:
-        zipped_file = [f for f in zip_ref.namelist()
-                       if f.endswith(f"{scan_number}_seg.nii.gz")][0]
-        filepath = zip_ref.extract(zipped_file, ".")
-    return filepath
+def unzip_file(f):
+    """Untar or unzip file."""
+    if zipfile.is_zipfile(f):
+        with zipfile.ZipFile(f) as zip_ref:
+            zip_ref.extractall(".")
+            imgs = zip_ref.namelist()
+    else:
+        with tarfile.TarFile(f) as tar_ref:
+            tar_ref.extractall(".")
+            imgs = tar_ref.getnames()
+    return imgs
 
 
 def run_captk(path_to_captk, pred, gold, tmp):
@@ -57,8 +64,8 @@ def run_captk(path_to_captk, pred, gold, tmp):
     subprocess.check_call(cmd)
 
 
-def extract_metrics(res, region):
-    """Find and return the metrics of interest.
+def extract_metrics(tmp, scan_id):
+    """Get scores for three regions: ET, WT, and TC.
 
     Metrics wanted:
       - Dice score
@@ -66,40 +73,60 @@ def extract_metrics(res, region):
       - specificity
       - sensitivity
     """
-    scores = res.loc[region]
-    dice = scores.get("Dice", "NA")
-    haus = scores.get("Hausdorff95", "NA")
-    sens = scores.get("Sensitivity", "NA")
-    spec = scores.get("Specificity", "NA")
-    return {
-        f"Dice_{region}": dice, f"Hausdorff95_{region}": haus,
-        f"Sensitivity_{region}": sens, f"Specificity_{region}": spec
-    }
+    res = (
+        pd.read_csv(tmp, index_col="Labels")
+        .filter(items=["Labels", "Dice", "Hausdorff95",
+                       "Sensitivity", "Specificity"])
+        .filter(items=["ET", "WT", "TC"], axis=0)
+        .reset_index()
+        .assign(scan_id=scan_id)
+        .pivot(index="scan_id", columns="Labels")
+    )
+    res.columns = ["_".join(col).strip() for col in res.columns.values]
+    return res
 
 
-def get_scores(tmp):
-    """Get scores for three regions: ET, WT, and TC."""
-    res = pd.read_csv(tmp, index_col="Labels")
-    et_scores = extract_metrics(res, "ET")
-    wt_scores = extract_metrics(res, "WT")
-    tc_scores = extract_metrics(res, "TC")
-    return {**et_scores, **wt_scores, **tc_scores}
+def score(pred_lst, gold_lst, captk_path, tmp_output="tmp.csv"):
+    """Compute and return scores for each scan."""
+    scores = []
+    for pred in pred_lst:
+
+        # If participant compressed a folder, then folder name will also
+        # be included in the names list.  Skip folder name in that case.
+        if pred.endswith("/"):
+            continue
+        scan_id = re.search(r"([0-9]{3})\.nii\.gz$", pred).group(1)
+        gold = [f for f in gold_lst
+                if f.endswith(f"{scan_id}_seg.nii.gz")][0]
+        run_captk(captk_path, pred, gold, tmp_output)
+        scan_scores = extract_metrics(tmp_output, scan_id)
+        scores.append(scan_scores)
+        os.remove(tmp_output)  # Remove file, as it's no longer needed
+    return pd.concat(scores)
 
 
 def main():
     """Main function."""
     args = get_args()
-    pred = args.predictions_file
-    gold = unzip_file(args.goldstandard_file, pred)
+    preds = unzip_file(args.predictions_file)
+    golds = unzip_file(args.goldstandard_file)
 
-    run_captk(args.captk_path, pred,
-              gold, args.tmp)
-    results = get_scores(args.tmp)
-    os.remove(args.tmp)  # Remove file, as it's no longer needed
+    results = score(preds, golds, args.captk_path)
+    results.loc["mean"] = results.mean()
 
+    # CSV file of scores for all scans.
+    results.to_csv("all_scores.csv")
+    syn = synapseclient.Synapse(configPath=args.synapse_config)
+    syn.login(silent=True)
+    csv = synapseclient.File("all_scores.csv", parent=args.parent_id)
+    csv = syn.store(csv)
+
+    # Results file for annotations.
     with open(args.output, "w") as out:
         out.write(json.dumps(
-            {**results, "submission_status": "ACCEPTED"}
+            {**results.loc["mean"].to_dict(),
+            "submission_scores": csv.id,
+            "submission_status": "ACCEPTED"}
         ))
 
 

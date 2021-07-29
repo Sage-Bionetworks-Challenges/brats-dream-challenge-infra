@@ -1,6 +1,7 @@
 FROM cbica/captk:release-1.8.1
 
-RUN pip install pandas
+RUN pip install --upgrade pip
+RUN pip install pandas synapseclient
 
 COPY validate.py /usr/local/bin/.
 COPY score.py /usr/local/bin/.

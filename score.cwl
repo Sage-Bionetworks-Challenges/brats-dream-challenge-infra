@@ -11,6 +11,10 @@ hints:
     dockerPull: docker.synapse.org/syn25829070/scoring:v2
 
 inputs:
+  - id: parent_id
+    type: string
+  - id: synapse_config
+    type: string
   - id: input_file
     type: File
   - id: goldstandard
@@ -19,6 +23,10 @@ inputs:
     type: boolean?
 
 arguments:
+  - valueFrom: $(inputs.parent_id)
+    prefix: --parentid
+  - valueFrom: $(inputs.synapse_config.path)
+    prefix: -c
   - valueFrom: $(inputs.input_file.path)
     prefix: -p
   - valueFrom: $(inputs.goldstandard.path)
@@ -119,27 +127,21 @@ outputs:
       outputEval: $(JSON.parse(self[0].contents)['Sensitivity_TC'])
 
   - id: Specificity_ET
-    type:
-      - string
-      - float
+    type: float
     outputBinding:
       glob: results.json
       loadContents: true
       outputEval: $(JSON.parse(self[0].contents)['Specificity_ET'])
 
   - id: Specificity_WT
-    type:
-      - string
-      - float
+    type: float
     outputBinding:
       glob: results.json
       loadContents: true
       outputEval: $(JSON.parse(self[0].contents)['Specificity_WT'])
 
   - id: Specificity_TC
-    type:
-      - string
-      - float
+    type: float
     outputBinding:
       glob: results.json
       loadContents: true
