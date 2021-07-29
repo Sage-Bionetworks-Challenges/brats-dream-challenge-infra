@@ -23,7 +23,7 @@ def get_args():
 
 
 def get_images(submission):
-    """Untar or unzip submission file."""
+    """Get filenames of images in the archived file."""
     if zipfile.is_zipfile(submission):
         with zipfile.ZipFile(submission) as zip_ref:
             imgs = zip_ref.namelist()
