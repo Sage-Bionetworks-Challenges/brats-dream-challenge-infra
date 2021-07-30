@@ -91,9 +91,10 @@ def score(pred_lst, gold_lst, captk_path, tmp_output="tmp.csv"):
     scores = []
     for pred in pred_lst:
 
-        # If participant compressed a folder, then folder name will also
-        # be included in the names list.  Skip folder name in that case.
-        if pred.endswith("/"):
+        # Skip top-level folder name and/or hidden __MACOSX/ files.
+        # These are products of archiving folder and using Mac's
+        # archiving feature, respectively.
+        if pred.endswith("/") or pred.startswith("__MACOSX/"):
             continue
         scan_id = re.search(r"([0-9]{3})\.nii\.gz$", pred).group(1)
         gold = [f for f in gold_lst
@@ -102,7 +103,7 @@ def score(pred_lst, gold_lst, captk_path, tmp_output="tmp.csv"):
         scan_scores = extract_metrics(tmp_output, scan_id)
         scores.append(scan_scores)
         os.remove(tmp_output)  # Remove file, as it's no longer needed
-    return pd.concat(scores)
+    return pd.concat(scores).sort_values(by="scan_id")
 
 
 def main():
@@ -112,7 +113,12 @@ def main():
     golds = unzip_file(args.goldstandard_file)
 
     results = score(preds, golds, args.captk_path)
+    cases = len(results.index)
     results.loc["mean"] = results.mean()
+    results.loc["sd"] = results.std()
+    results.loc["median"] = results.median()
+    results.loc["25quantile"] = results.quantile(q=0.25)
+    results.loc["75quantile"] = results.quantile(q=0.75)
 
     # CSV file of scores for all scans.
     results.to_csv("all_scores.csv")
@@ -125,8 +131,9 @@ def main():
     with open(args.output, "w") as out:
         out.write(json.dumps(
             {**results.loc["mean"].to_dict(),
-            "submission_scores": csv.id,
-            "submission_status": "ACCEPTED"}
+             "cases_evaluated": cases,
+             "submission_scores": csv.id,
+             "submission_status": "ACCEPTED"}
         ))
 
 
