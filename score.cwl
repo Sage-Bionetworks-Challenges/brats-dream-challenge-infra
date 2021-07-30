@@ -46,81 +46,63 @@ outputs:
       glob: results.json
 
   - id: Dice_ET
-    type:
-      - string
-      - float
+    type: float
     outputBinding:
       glob: results.json
       loadContents: true
       outputEval: $(JSON.parse(self[0].contents)['Dice_ET'])
 
   - id: Dice_WT
-    type:
-      - string
-      - float
+    type: float
     outputBinding:
       glob: results.json
       loadContents: true
       outputEval: $(JSON.parse(self[0].contents)['Dice_WT'])
 
   - id: Dice_TC
-    type:
-      - string
-      - float
+    type: float
     outputBinding:
       glob: results.json
       loadContents: true
       outputEval: $(JSON.parse(self[0].contents)['Dice_TC'])
 
   - id: Hausdorff95_ET
-    type:
-      - string
-      - float
+    type: float
     outputBinding:
       glob: results.json
       loadContents: true
       outputEval: $(JSON.parse(self[0].contents)['Hausdorff95_ET'])
 
   - id: Hausdorff95_WT
-    type:
-      - string
-      - float
+    type: float
     outputBinding:
       glob: results.json
       loadContents: true
       outputEval: $(JSON.parse(self[0].contents)['Hausdorff95_WT'])
 
   - id: Hausdorff95_TC
-    type:
-      - string
-      - float
+    type: float
     outputBinding:
       glob: results.json
       loadContents: true
       outputEval: $(JSON.parse(self[0].contents)['Hausdorff95_TC'])
 
   - id: Sensitivity_ET
-    type:
-      - string
-      - float
+    type: float
     outputBinding:
       glob: results.json
       loadContents: true
       outputEval: $(JSON.parse(self[0].contents)['Sensitivity_ET'])
 
   - id: Sensitivity_WT
-    type:
-      - string
-      - float
+    type: float
     outputBinding:
       glob: results.json
       loadContents: true
       outputEval: $(JSON.parse(self[0].contents)['Sensitivity_WT'])
 
   - id: Sensitivity_TC
-    type:
-      - string
-      - float
+    type: float
     outputBinding:
       glob: results.json
       loadContents: true
