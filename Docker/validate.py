@@ -32,7 +32,12 @@ def get_images(submission):
             imgs = tar_ref.getnames()
     else:
         imgs = []
-    return imgs
+
+    # Filter out top-level folder name, in case participant archived
+    # a folder rather than bundle of files and/or participant used
+    # MacOS to archive.
+    return [img for img in imgs
+            if not img.endswith("/") and not img.startswith("__MACOSX/")]
 
 
 def validate_file_format(imgs):
@@ -44,18 +49,11 @@ def validate_file_format(imgs):
 
 
 def validate_filenames(imgs):
-    """Check that there is a NIfTI file for every scan ID (001-166)."""
-    missing_ids = []
-    scan_ids = range(1, 167)
-    for i in scan_ids:
-        scan_id = f"{i:03d}"
-        if not any(scan_id in f for f in imgs):
-            missing_ids.append(scan_id)
-
+    """Check that every NIfTI filename ends with a case ID."""
     error = []
-    if missing_ids:
-        error = [("Missing NIfTI file for the following IDs: "
-                  f"{', '.join(missing_ids)}")]
+    if not all(f[-10:-7].isdigit() for f in imgs):
+        error = [("Not all filenames in the archive end with a case "
+                  "ID (*_###.nii.gz).")]
     return error
 
 
