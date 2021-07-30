@@ -114,7 +114,7 @@ steps:
   score:
     run: score.cwl
     in:
-      - id: parentid
+      - id: parent_id
         source: "#submitterUploadSynId"
       - id: synapse_config
         source: "#synapseConfig"
