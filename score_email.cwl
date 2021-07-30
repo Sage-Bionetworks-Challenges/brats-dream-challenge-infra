@@ -75,7 +75,7 @@ requirements:
                   message = ["Hello %s,\n\n" % name,
                              "Your submission (id: %s) has been scored and below are the metric averages:\n\n" % sub.id,
                              "\n".join([i + " : " + str(annots[i]) for i in annots]),
-                             "\nTo look at each scan's score, go here: https://www.synapse.org/#!Synapse:{%s}" %csv_id,
+                             "\nTo look at each scan's score, go here: https://www.synapse.org/#!Synapse:%s" %csv_id,
                              "\n\nSincerely,\nChallenge Administrator"]
               syn.sendMessage(
                   userIds=[participantid],
