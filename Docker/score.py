@@ -133,7 +133,7 @@ def main():
             {**results.loc["mean"].to_dict(),
              "cases_evaluated": cases,
              "submission_scores": csv.id,
-             "submission_status": "ACCEPTED"}
+             "submission_status": "SCORED"}
         ))
 
 
