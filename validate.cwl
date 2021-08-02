@@ -13,12 +13,16 @@ hints:
 inputs:
   - id: input_file
     type: File
+  - id: goldstandard
+    type: File
   - id: entity_type
     type: string
 
 arguments:
   - valueFrom: $(inputs.input_file)
     prefix: -p
+  - valueFrom: $(inputs.goldstandard.path)
+    prefix: -g
   - valueFrom: $(inputs.entity_type)
     prefix: -e
   - valueFrom: results.json
