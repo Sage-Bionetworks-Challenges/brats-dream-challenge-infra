@@ -17,6 +17,8 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--predictions_file",
                         type=str, required=True)
+    parser.add_argument("-g", "--goldstandard_file",
+                        type=str, required=True)
     parser.add_argument("-e", "--entity_type",
                         type=str, required=True)
     parser.add_argument("-o", "--output",
@@ -54,13 +56,13 @@ def check_file_contents(img):
         return "invalid"
 
 
-def validate_file_format(imgs):
+def validate_file_format(preds):
     """Check that all files are NIfTI files (*.nii.gz)."""
     error = []
-    if all(f.endswith(".nii.gz") for f in imgs):
+    if all(pred.endswith(".nii.gz") for pred in preds):
 
         # Ensure that all file contents are NIfTI.
-        if not all(check_file_contents(img) == "valid" for img in imgs):
+        if not all(check_file_contents(pred) == "valid" for pred in preds):
             error = [("One or more predictions cannot be opened as a "
                       "NIfTI file.")]
     else:
@@ -68,16 +70,23 @@ def validate_file_format(imgs):
     return error
 
 
-def validate_filenames(imgs):
+def validate_filenames(preds, golds):
     """Check that every NIfTI filename ends with a case ID."""
     error = []
 
-    case_ids = [img[-12:-7] for img in imgs]
+    case_ids = [pred[-12:-7] for pred in preds]
     if all(case_id.isdigit() for case_id in case_ids):
 
         # Check that all case IDs are unique.
         if len(set(case_ids)) != len(case_ids):
-            error = ["Duplicate predictions found for one or more cases."]
+            error.append("Duplicate predictions found for one or more cases.")
+
+        # Check that case IDs are known (e.g. has corresponding gold file).
+        gold_case_ids = {gold[-16:-11] for gold in golds}
+        unknown_ids = set(case_ids) - gold_case_ids
+        if unknown_ids:
+            error.append(
+                f"Unknown case IDs found: {', '.join(sorted(unknown_ids))}")
     else:
         error = [("Not all filenames in the archive end with a case "
                   "ID (*{5-digit ID}.nii.gz).")]
@@ -96,10 +105,11 @@ def main():
             f"Submission must be a File, not {entity_type}."
         )
     else:
-        imgs = get_images(args.predictions_file)
-        if imgs:
-            invalid_reasons.extend(validate_file_format(imgs))
-            invalid_reasons.extend(validate_filenames(imgs))
+        preds = get_images(args.predictions_file)
+        golds = get_images(args.goldstandard_file)
+        if preds:
+            invalid_reasons.extend(validate_file_format(preds))
+            invalid_reasons.extend(validate_filenames(preds, golds))
         else:
             invalid_reasons.append(
                 "Submission must be a tarball or zipped archive "

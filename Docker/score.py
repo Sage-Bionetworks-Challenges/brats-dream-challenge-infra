@@ -8,7 +8,6 @@ Run `BraTS Similarity Metrics Computation` command from CaPTk and return:
   - Sensitivity
 """
 import os
-import re
 import subprocess
 import argparse
 import json
@@ -94,9 +93,10 @@ def score(pred_lst, gold_lst, captk_path, tmp_output="tmp.csv"):
         # Skip top-level folder name and/or hidden __MACOSX/ files.
         # These are products of archiving folder and using Mac's
         # archiving feature, respectively.
-        if pred.endswith("/") or pred.startswith("__MACOSX/"):
+        if pred.endswith("/") or pred.startswith("__MACOSX/") \
+                or pred.endswith(".DS_Store"):
             continue
-        scan_id = re.search(r"([0-9]{3})\.nii\.gz$", pred).group(1)
+        scan_id = pred[-12:-7]
         gold = [f for f in gold_lst
                 if f.endswith(f"{scan_id}_seg.nii.gz")][0]
         run_captk(captk_path, pred, gold, tmp_output)
