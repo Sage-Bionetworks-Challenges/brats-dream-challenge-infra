@@ -31,6 +31,20 @@ outputs: []
 
 steps:
 
+  set_submitter_folder_permissions:
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/set_permissions.cwl
+    in:
+      - id: entityid
+        source: "#submitterUploadSynId"
+      # TODO: replace `valueFrom` with the admin user ID or admin team ID
+      - id: principalid
+        valueFrom: "3427583"
+      - id: permissions
+        valueFrom: "download"
+      - id: synapse_config
+        source: "#synapseConfig"
+    out: []
+
   download_submission:
     run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/get_submission.cwl
     in:
