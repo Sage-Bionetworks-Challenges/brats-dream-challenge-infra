@@ -43,7 +43,7 @@ def unzip_file(f):
             zip_ref.extractall(".")
             imgs = zip_ref.namelist()
     else:
-        with tarfile.TarFile(f) as tar_ref:
+        with tarfile.open(f) as tar_ref:
             tar_ref.extractall(".")
             imgs = tar_ref.getnames()
     return imgs

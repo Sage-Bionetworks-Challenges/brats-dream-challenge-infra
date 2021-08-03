@@ -33,7 +33,7 @@ def get_images(submission):
             zip_ref.extractall(".")
             imgs = zip_ref.namelist()
     elif tarfile.is_tarfile(submission):
-        with tarfile.TarFile(submission) as tar_ref:
+        with tarfile.open(submission) as tar_ref:
             tar_ref.extractall(".")
             imgs = tar_ref.getnames()
     else:
