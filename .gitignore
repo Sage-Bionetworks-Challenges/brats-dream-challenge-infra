@@ -1,3 +1,5 @@
-Predictions_SCAN
-GroundTruth
+*zip
+*tar*
 Hausdorff95
+all_scores.csv
+results.json
