@@ -11,11 +11,10 @@ import os
 import subprocess
 import argparse
 import json
-import tarfile
-import zipfile
 
 import pandas as pd
 import synapseclient
+import utils
 
 
 def get_args():
@@ -34,19 +33,6 @@ def get_args():
     parser.add_argument("-c", "--captk_path",
                         type=str, required=True)
     return parser.parse_args()
-
-
-def unzip_file(f):
-    """Untar or unzip file."""
-    if zipfile.is_zipfile(f):
-        with zipfile.ZipFile(f) as zip_ref:
-            zip_ref.extractall(".")
-            imgs = zip_ref.namelist()
-    else:
-        with tarfile.open(f) as tar_ref:
-            tar_ref.extractall(".")
-            imgs = tar_ref.getnames()
-    return imgs
 
 
 def run_captk(path_to_captk, pred, gold, tmp):
@@ -89,13 +75,6 @@ def score(pred_lst, gold_lst, captk_path, tmp_output="tmp.csv"):
     """Compute and return scores for each scan."""
     scores = []
     for pred in pred_lst:
-
-        # Skip top-level folder name and/or hidden __MACOSX/ files.
-        # These are products of archiving folder and using Mac's
-        # archiving feature, respectively.
-        if pred.endswith("/") or pred.startswith("__MACOSX/") \
-                or pred.endswith(".DS_Store"):
-            continue
         scan_id = pred[-12:-7]
         gold = [f for f in gold_lst
                 if f.endswith(f"{scan_id}_seg.nii.gz")][0]
@@ -109,8 +88,8 @@ def score(pred_lst, gold_lst, captk_path, tmp_output="tmp.csv"):
 def main():
     """Main function."""
     args = get_args()
-    preds = unzip_file(args.predictions_file)
-    golds = unzip_file(args.goldstandard_file)
+    preds = utils.unzip_file(args.predictions_file)
+    golds = utils.unzip_file(args.goldstandard_file)
 
     results = score(preds, golds, args.captk_path)
     cases = len(results.index)

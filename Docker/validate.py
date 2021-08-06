@@ -6,10 +6,9 @@ Predictions file must be a tarball or zipped archive of NIfTI files
 """
 import argparse
 import json
-import tarfile
-import zipfile
 
 import nibabel as nib
+import utils
 
 
 def get_args():
@@ -24,27 +23,6 @@ def get_args():
     parser.add_argument("-o", "--output",
                         type=str, default="results.json")
     return parser.parse_args()
-
-
-def get_images(submission):
-    """Get filenames of images in the archived file."""
-    if zipfile.is_zipfile(submission):
-        with zipfile.ZipFile(submission) as zip_ref:
-            zip_ref.extractall(".")
-            imgs = zip_ref.namelist()
-    elif tarfile.is_tarfile(submission):
-        with tarfile.open(submission) as tar_ref:
-            tar_ref.extractall(".")
-            imgs = tar_ref.getnames()
-    else:
-        imgs = []
-
-    # Filter out top-level folder name, in case participant archived
-    # a folder rather than bundle of files and/or participant used
-    # MacOS to archive.
-    return [img for img in imgs
-            if not img.endswith("/") and not img.startswith("__MACOSX/")
-            and not img.endswith(".DS_Store")]
 
 
 def check_file_contents(img):
@@ -105,8 +83,8 @@ def main():
             f"Submission must be a File, not {entity_type}."
         )
     else:
-        preds = get_images(args.predictions_file)
-        golds = get_images(args.goldstandard_file)
+        preds = utils.unzip_file(args.predictions_file)
+        golds = utils.unzip_file(args.goldstandard_file)
         if preds:
             invalid_reasons.extend(validate_file_format(preds))
             invalid_reasons.extend(validate_filenames(preds, golds))
