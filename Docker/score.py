@@ -91,29 +91,39 @@ def main():
     preds = utils.unzip_file(args.predictions_file)
     golds = utils.unzip_file(args.goldstandard_file)
 
-    results = score(preds, golds, args.captk_path)
-    cases = len(results.index)
-    results.loc["mean"] = results.mean()
-    results.loc["sd"] = results.std()
-    results.loc["median"] = results.median()
-    results.loc["25quantile"] = results.quantile(q=0.25)
-    results.loc["75quantile"] = results.quantile(q=0.75)
+    try:
+        results = score(preds, golds, args.captk_path)
+        cases = len(results.index)
+        results.loc["mean"] = results.mean()
+        results.loc["sd"] = results.std()
+        results.loc["median"] = results.median()
+        results.loc["25quantile"] = results.quantile(q=0.25)
+        results.loc["75quantile"] = results.quantile(q=0.75)
 
-    # CSV file of scores for all scans.
-    results.to_csv("all_scores.csv")
-    syn = synapseclient.Synapse(configPath=args.synapse_config)
-    syn.login(silent=True)
-    csv = synapseclient.File("all_scores.csv", parent=args.parent_id)
-    csv = syn.store(csv)
+        # CSV file of scores for all scans.
+        results.to_csv("all_scores.csv")
+        syn = synapseclient.Synapse(configPath=args.synapse_config)
+        syn.login(silent=True)
+        csv = synapseclient.File("all_scores.csv", parent=args.parent_id)
+        csv = syn.store(csv)
 
-    # Results file for annotations.
-    with open(args.output, "w") as out:
-        out.write(json.dumps(
-            {**results.loc["mean"].to_dict(),
-             "cases_evaluated": cases,
-             "submission_scores": csv.id,
-             "submission_status": "SCORED"}
-        ))
+        # Results file for annotations.
+        with open(args.output, "w") as out:
+            out.write(json.dumps(
+                {**results.loc["mean"].to_dict(),
+                 "cases_evaluated": cases,
+                 "submission_scores": csv.id,
+                 "submission_status": "SCORED"}
+            ))
+    except subprocess.CalledProcessError:
+        with open(args.output, "w") as out:
+            out.write(json.dumps(
+                {"submission_status": "INVALID",
+                 "submission_errors": (
+                     "Error encountered during scoring. Please ask a Challenge "
+                     "Organizer for more information."
+                 )}
+            ))
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ baseCommand: score.py
 
 hints:
   DockerRequirement:
-    dockerPull: docker.synapse.org/syn25829070/scoring:v2
+    dockerPull: docker.synapse.org/syn25829070/scoring:v3
 
 inputs:
   - id: parent_id
@@ -44,90 +44,6 @@ outputs:
     type: File
     outputBinding:
       glob: results.json
-
-  - id: Dice_ET
-    type: float
-    outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['Dice_ET'])
-
-  - id: Dice_WT
-    type: float
-    outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['Dice_WT'])
-
-  - id: Dice_TC
-    type: float
-    outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['Dice_TC'])
-
-  - id: Hausdorff95_ET
-    type: float
-    outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['Hausdorff95_ET'])
-
-  - id: Hausdorff95_WT
-    type: float
-    outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['Hausdorff95_WT'])
-
-  - id: Hausdorff95_TC
-    type: float
-    outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['Hausdorff95_TC'])
-
-  - id: Sensitivity_ET
-    type: float
-    outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['Sensitivity_ET'])
-
-  - id: Sensitivity_WT
-    type: float
-    outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['Sensitivity_WT'])
-
-  - id: Sensitivity_TC
-    type: float
-    outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['Sensitivity_TC'])
-
-  - id: Specificity_ET
-    type: float
-    outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['Specificity_ET'])
-
-  - id: Specificity_WT
-    type: float
-    outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['Specificity_WT'])
-
-  - id: Specificity_TC
-    type: float
-    outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['Specificity_TC'])
 
   - id: status
     type: string
