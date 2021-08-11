@@ -71,13 +71,12 @@ def extract_metrics(tmp, scan_id):
     return res
 
 
-def score(pred_lst, gold_lst, captk_path, tmp_output="tmp.csv"):
+def score(parent, pred_lst, captk_path, tmp_output="tmp.csv"):
     """Compute and return scores for each scan."""
     scores = []
     for pred in pred_lst:
         scan_id = pred[-12:-7]
-        gold = [f for f in gold_lst
-                if f.endswith(f"{scan_id}_seg.nii.gz")][0]
+        gold = os.path.join(parent, f"BraTS2021_{scan_id}_seg.nii.gz")
         run_captk(captk_path, pred, gold, tmp_output)
         scan_scores = extract_metrics(tmp_output, scan_id)
         scores.append(scan_scores)
@@ -91,8 +90,9 @@ def main():
     preds = utils.unzip_file(args.predictions_file)
     golds = utils.unzip_file(args.goldstandard_file)
 
+    dir_name = os.path.split(golds[0])[0]
     try:
-        results = score(preds, golds, args.captk_path)
+        results = score(dir_name, preds, args.captk_path)
         cases = len(results.index)
         results.loc["mean"] = results.mean()
         results.loc["sd"] = results.std()
