@@ -171,4 +171,15 @@ steps:
       - id: previous_annotation_finished
         source: "#annotate_validation_with_output/finished"
     out: [finished]
+
+  check_final_status:
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/check_status.cwl
+    in:
+      - id: status
+        source: "#score/status"
+      - id: previous_annotation_finished
+        source: "#annotate_submission_with_output/finished"
+      - id: previous_email_finished
+        source: "#email_score/finished"
+    out: [finished]
  
