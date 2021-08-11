@@ -8,7 +8,7 @@ baseCommand: score.py
 
 hints:
   DockerRequirement:
-    dockerPull: docker.synapse.org/syn25829070/scoring:v3
+    dockerPull: docker.synapse.org/syn25829070/scoring:v4
 
 inputs:
   - id: parent_id
@@ -31,7 +31,7 @@ arguments:
     prefix: -p
   - valueFrom: $(inputs.goldstandard.path)
     prefix: -g
-  - valueFrom: "/work/CaPTk"
+  - valueFrom: "squashfs-root/usr"
     prefix: -c
   - valueFrom: results.json
     prefix: -o
