@@ -140,6 +140,7 @@ steps:
         source: "#check_status/finished"
     out:
       - id: results
+      - id: status
       
   email_score:
     run: score_email.cwl
