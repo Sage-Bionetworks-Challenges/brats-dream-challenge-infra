@@ -28,16 +28,16 @@ def _filter_zip(members):
     return files_to_extract
 
 
-def unzip_file(f):
+def unzip_file(f, path="."):
     """Untar or unzip file."""
     if zipfile.is_zipfile(f):
         with zipfile.ZipFile(f) as zip_ref:
             imgs = _filter_zip(zip_ref.infolist())
-            zip_ref.extractall(members=imgs)
+            zip_ref.extractall(path=path, members=imgs)
     elif tarfile.is_tarfile(f):
         with tarfile.open(f) as tar_ref:
             members = _filter_tar(tar_ref)
-            tar_ref.extractall(members=members)
+            tar_ref.extractall(path=path, members=members)
             imgs = [member.name for member in members]
     else:
         imgs = []

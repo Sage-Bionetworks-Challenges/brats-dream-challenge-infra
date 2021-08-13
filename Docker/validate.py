@@ -4,6 +4,7 @@
 Predictions file must be a tarball or zipped archive of NIfTI files
 (*.nii.gz). Each NIfTI file must have an ID in its filename.
 """
+import os
 import argparse
 import json
 
@@ -20,27 +21,29 @@ def get_args():
                         type=str, required=True)
     parser.add_argument("-e", "--entity_type",
                         type=str, required=True)
+    parser.add_argument("-t", "--tmp_dir",
+                        type=str, default="tmpdir")             
     parser.add_argument("-o", "--output",
                         type=str, default="results.json")
     return parser.parse_args()
 
 
-def check_file_contents(img):
+def check_file_contents(img, parent):
     """Check that the file can be opened as NIfTI."""
     try:
-        nib.load(img)
+        nib.load(os.path.join(parent, img))
         return "valid"
     except nib.filebasedimages.ImageFileError:
         return "invalid"
 
 
-def validate_file_format(preds):
+def validate_file_format(preds, parent):
     """Check that all files are NIfTI files (*.nii.gz)."""
     error = []
     if all(pred.endswith(".nii.gz") for pred in preds):
 
         # Ensure that all file contents are NIfTI.
-        if not all(check_file_contents(pred) == "valid" for pred in preds):
+        if not all(check_file_contents(pred, parent) == "valid" for pred in preds):
             error = [("One or more predictions cannot be opened as a "
                       "NIfTI file.")]
     else:
@@ -83,10 +86,10 @@ def main():
             f"Submission must be a File, not {entity_type}."
         )
     else:
-        preds = utils.unzip_file(args.predictions_file)
+        preds = utils.unzip_file(args.predictions_file, path=args.tmp_dir)
         golds = utils.unzip_file(args.goldstandard_file)
         if preds:
-            invalid_reasons.extend(validate_file_format(preds))
+            invalid_reasons.extend(validate_file_format(preds, args.tmp_dir))
             invalid_reasons.extend(validate_filenames(preds, golds))
         else:
             invalid_reasons.append(

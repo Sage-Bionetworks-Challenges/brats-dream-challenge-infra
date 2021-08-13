@@ -4,50 +4,32 @@
 #
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: score.py
-
-hints:
-  DockerRequirement:
-    dockerPull: docker.synapse.org/syn25829070/scoring:v4
+baseCommand: sh
 
 inputs:
-  - id: parent_id
-    type: string
-  - id: synapse_config
+  - id: script
     type: File
-  - id: input_file
-    type: File
+    inputBinding:
+      position: 0
+  - id: predictions
+    type: Directory
   - id: goldstandard
-    type: File
-  - id: check_validation_finished
-    type: boolean?
-
-arguments:
-  - valueFrom: $(inputs.parent_id)
-    prefix: --parent_id
-  - valueFrom: $(inputs.synapse_config.path)
-    prefix: -s
-  - valueFrom: $(inputs.input_file.path)
-    prefix: -p
-  - valueFrom: $(inputs.goldstandard.path)
-    prefix: -g
-  - valueFrom: "squashfs-root/usr"
-    prefix: -c
-  - valueFrom: results.json
-    prefix: -o
+    type: Directory
 
 requirements:
-  - class: InlineJavascriptRequirement
+  #- class: InlineJavascriptRequirement
+  InitialWorkDirRequirement:
+    listing:
+      - $(inputs.predictions)
+      - $(inputs.goldstandard)
      
 outputs:
-  - id: results
+  - id: scores
     type: File
     outputBinding:
-      glob: results.json
+      glob: "inFileList.csv"
 
-  - id: status
-    type: string
+  - id: errors
+    type: File
     outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['submission_status'])
+      glob: "invalid_input_data.csv"
