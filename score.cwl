@@ -6,14 +6,16 @@ cwlVersion: v1.0
 class: CommandLineTool
 baseCommand: score.sh
 
-hints:
-  DockerRequirement:
-    dockerPull: docker.synapse.org/syn25829070/scoring:v4
+# hints:
+#   DockerRequirement:
+#     dockerPull: docker.synapse.org/syn25829070/scoring:v4
 
 inputs:
   - id: predictions
     type: Directory
   - id: goldstandard
+    type: Directory
+  - id: captk
     type: Directory
 
 requirements:
@@ -22,12 +24,13 @@ requirements:
     listing:
       - $(inputs.predictions)
       - $(inputs.goldstandard)
+      - $(inputs.captk)
      
 outputs:
   - id: scores
-    type: File
+    type: Directory
     outputBinding:
-      glob: "inFileList.csv"
+      glob: "scores"
 
   - id: errors
     type: File

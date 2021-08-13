@@ -1,16 +1,14 @@
 #!/bin/sh
 
-TMP="tmpdir"
-
 # Get list of prediction files and save into CSV.
-find ${TMP}/* -type f > inFileList.csv
+find tmpdir/* -type f > inFileList.csv
 while read i
 do
     bn=$( basename ${i} );
     sub=${bn%.nii.gz};
     id=$( basename $sub | tail -c 6 );
     gt="RSNA_ASNR_MICCAI_BraTS2021_ValidationGT/BraTS2021_${id}_seg.nii.gz";
-    echo "${id},${i},${gt}" >> ${TMP}/inputData.csv
+    echo "${id},${i},${gt}" >> inputData.csv
 done < inFileList.csv
 
 
@@ -38,4 +36,4 @@ do
             echo $i >> invalid_input_data.csv;
         fi
     fi
-done < ${TMP}/inputData.csv
+done < inputData.csv
