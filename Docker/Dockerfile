@@ -7,6 +7,7 @@ RUN pip install pandas synapseclient nibabel
 COPY utils.py /usr/local/bin/.
 COPY validate.py /usr/local/bin/.
 COPY score.py /usr/local/bin/.
+COPY score.sh /usr/local/bin/.
 
 # Manually copy the Hausdorff binary, as an NITRC issue is
 # preventing some of the precompiled apps from getting pushed

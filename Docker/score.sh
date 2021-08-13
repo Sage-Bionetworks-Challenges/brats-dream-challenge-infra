@@ -1,3 +1,5 @@
+#!/bin/sh
+
 TMP="tmpdir"
 
 # Get list of prediction files and save into CSV.
@@ -20,7 +22,7 @@ do
     pred=${fields[1]}
     gold=${fields[2]}
 
-    squashfs-root/usr/bin/Utilities \
+    /work/CaPTk/bin/Utilities \
         -i ${gold} \
         -lsb ${pred} \
         -o scores/${id}_stats.csv;
