@@ -317,7 +317,15 @@ steps:
       - id: uploaded_fileid
       - id: uploaded_file_version
       - id: results
-  # TODO: Add tool to determine which queue to submit to
+
+  # Add tool to determine which queue to submit to
+  determine_internal_queue:
+    run: determine_queue.cwl
+    in:
+      - id: synapse_config
+        source: "#synapseConfig"
+    out:
+      - id: submit_to_queue
 
   # Ability to submit to many internal queues
   submit_to_internal_queues:
@@ -331,5 +339,5 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
       - id: evaluationid
-        source: "#get_evaluation_config/submit_to_queue"
+        source: "#determine_internal_queue/submit_to_queue"
     out: []
