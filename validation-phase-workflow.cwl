@@ -152,6 +152,7 @@ steps:
         source: "#check_status/finished"
     out:
       - id: results
+      - id: status
       
   email_score:
     run: score_email.cwl
@@ -165,7 +166,7 @@ steps:
       # OPTIONAL: add annotations to be withheld from participants to `[]`
       # - id: private_annotations
       #   default: []
-    out: []
+    out: [finished]
 
   annotate_submission_with_output:
     run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/annotate_submission.cwl
@@ -182,5 +183,16 @@ steps:
         source: "#synapseConfig"
       - id: previous_annotation_finished
         source: "#annotate_validation_with_output/finished"
+    out: [finished]
+
+  check_final_status:
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/check_status.cwl
+    in:
+      - id: status
+        source: "#score/status"
+      - id: previous_annotation_finished
+        source: "#annotate_submission_with_output/finished"
+      - id: previous_email_finished
+        source: "#email_score/finished"
     out: [finished]
  
