@@ -32,12 +32,12 @@ outputs: []
 steps:
 
   set_submitter_folder_permissions:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/set_permissions.cwl
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/set_permissions.cwl
     in:
       - id: entityid
         source: "#submitterUploadSynId"
       - id: principalid
-        valueFrom: "3355193"
+        valueFrom: "3427583"
       - id: permissions
         valueFrom: "download"
       - id: synapse_config
@@ -56,49 +56,8 @@ steps:
       - id: evaluation_id
       - id: results
 
-  get_evaluation_config:
-    run: get_config.cwl
-    in:
-      - id: queue_id
-        source: "#get_submissionid/evaluation_id"
-      - id: configuration
-        default:
-          class: File
-          location: "config.yml"
-    out:
-      - id: question
-      - id: submit_to_queue
-      - id: config
-      - id: runtime
-      - id: dataset_path
-      - id: center
-
-  modify_config_annotations:
-    run: modify_annotations.cwl
-    in:
-      - id: inputjson
-        source: "#get_evaluation_config/config"
-      - id: site
-        source: "#get_evaluation_config/center"
-    out: [results]
-
-  annotate_main_submission_with_config:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/annotate_submission.cwl
-    in:
-      - id: submissionid
-        source: "#get_submissionid/submissionid"
-      - id: annotation_values
-        source: "#modify_config_annotations/results"
-      - id: to_public
-        default: true
-      - id: force
-        default: true
-      - id: synapse_config
-        source: "#synapseConfig"
-    out: [finished]
-
   annotate_internal_submission:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/annotate_submission.cwl
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/annotate_submission.cwl
     in:
       - id: submissionid
         source: "#submissionId"
@@ -116,15 +75,14 @@ steps:
     run: https://raw.githubusercontent.com/Sage-Bionetworks-Workflows/dockstore-tool-synapse/v0.2/cwl/synapse-get-tool.cwl
     in:
       - id: synapseid
-        # source: "#get_evaluation_config/goldstandard"
-        valueFrom: "syn22043503"
+        valueFrom: "syn26017031"
       - id: synapse_config
         source: "#synapseConfig"
     out:
       - id: filepath
 
   get_docker_config:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/get_docker_config.cwl
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/get_docker_config.cwl
     in:
       - id: synapse_config
         source: "#synapseConfig"
@@ -148,7 +106,7 @@ steps:
       - id: submitter_synid
 
   annotate_submission_main_submitter:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/annotate_submission.cwl
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/annotate_submission.cwl
     in:
       - id: submissionid
         source: "#submissionId"
@@ -194,21 +152,21 @@ steps:
   validate:
     run: validate.cwl
     in:
-      - id: inputfile
-        source: "#run_docker/predictions"
-      #- id: question
-      #  source: "#get_evaluation_config/question"
+      - id: input_file
+        source: "#download_submission/filepath"
       - id: goldstandard
         source: "#download_goldstandard/filepath"
       - id: entity_type
-        default: "file"
+        source: "#download_submission/entity_type"
     out:
       - id: results
       - id: status
       - id: invalid_reasons
+      - id: predictions
+      - id: references
   
   email_validation:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/validate_email.cwl
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/validate_email.cwl
     in:
       - id: submissionid
         source: "#get_submissionid/submissionid"
@@ -233,7 +191,7 @@ steps:
     out: [results]
 
   annotate_main_submission_with_validation:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/annotate_submission.cwl
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/annotate_submission.cwl
     in:
       - id: submissionid
         source: "#get_submissionid/submissionid"
@@ -248,7 +206,7 @@ steps:
     out: [finished]
 
   annotate_submission_with_validation:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/annotate_submission.cwl
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/annotate_submission.cwl
     in:
       - id: submissionid
         source: "#submissionId"
@@ -263,7 +221,7 @@ steps:
     out: [finished]
 
   check_status:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/check_status.cwl
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/check_status.cwl
     in:
       - id: status
         source: "#validate/status"
@@ -276,28 +234,24 @@ steps:
   score:
     run: score.cwl
     in:
-      - id: inputfile
-        source: "#run_docker/predictions"
+      - id: script
+        valueFrom: "compute_scores.sh"
+      - id: predictions
+        source: "#validate/predictions"
       - id: goldstandard
-        source: "#download_goldstandard/filepath"
-      - id: submissionid
-        source: "#submissionId"
-      #- id: question
-      #  source: "#get_evaluation_config/question"
-      - id: previous
-        source: "#check_status/finished"
+        source: "#validate/references"
     out:
-      - id: results
+      - id: scores
 
   email_score:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/score_email.cwl
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/score_email.cwl
     in:
       - id: submissionid
         source: "#get_submissionid/submissionid"
       - id: synapse_config
         source: "#synapseConfig"
       - id: results
-        source: "#score/results"
+        source: "#score/scores"
     out: []
 
   # Add tool to revise scores to add extra dataset queue
@@ -311,7 +265,7 @@ steps:
     out: [results]
 
   annotate_main_submission_with_scores:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/annotate_submission.cwl
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/annotate_submission.cwl
     in:
       - id: submissionid
         source: "#get_submissionid/submissionid"
@@ -327,7 +281,7 @@ steps:
 
   # annotate internal submission with scores
   annotate_submission_with_scores:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/annotate_submission.cwl
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/annotate_submission.cwl
     in:
       - id: submissionid
         source: "#submissionId"
