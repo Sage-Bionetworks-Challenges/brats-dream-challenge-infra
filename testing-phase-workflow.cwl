@@ -180,23 +180,13 @@ steps:
         default: true
     out: [finished]
 
-  # Add tool to revise scores to add extra dataset queue
-  modify_validation_annotations:
-    run: modify_annotations.cwl
-    in:
-      - id: inputjson
-        source: "#validate/results"
-      - id: site
-        source: "#get_evaluation_config/center"
-    out: [results]
-
   annotate_main_submission_with_validation:
     run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/annotate_submission.cwl
     in:
       - id: submissionid
         source: "#get_submissionid/submissionid"
       - id: annotation_values
-        source: "#modify_validation_annotations/results"
+        source: "#validate/results"
       - id: to_public
         default: true
       - id: force
@@ -259,23 +249,13 @@ steps:
         source: "#score/scores"
     out: []
 
-  # Add tool to revise scores to add extra dataset queue
-  modify_score_annotations:
-    run: modify_annotations.cwl
-    in:
-      - id: inputjson
-        source: "#score/results"
-      - id: site
-        source: "#get_evaluation_config/center"
-    out: [results]
-
   annotate_main_submission_with_scores:
     run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/annotate_submission.cwl
     in:
       - id: submissionid
         source: "#get_submissionid/submissionid"
       - id: annotation_values
-        source: "#modify_score_annotations/results"
+        source: "#score/results"
       - id: to_public
         default: true
       - id: force
