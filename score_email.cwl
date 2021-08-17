@@ -88,4 +88,8 @@ requirements:
               messageSubject=subject,
               messageBody="".join(message))
           
-outputs: []
+outputs:
+- id: finished
+  type: boolean
+  outputBinding:
+    outputEval: $( true )
