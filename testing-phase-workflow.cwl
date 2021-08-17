@@ -234,14 +234,19 @@ steps:
   score:
     run: score.cwl
     in:
-      - id: script
-        valueFrom: "compute_scores.sh"
-      - id: predictions
-        source: "#validate/predictions"
+      - id: parent_id
+        source: "#submitterUploadSynId"
+      - id: synapse_config
+        source: "#synapseConfig"
+      - id: input_file
+        source: "#download_submission/filepath"
       - id: goldstandard
-        source: "#validate/references"
+        source: "#download_goldstandard/filepath"
+      - id: check_validation_finished
+        source: "#check_status/finished"
     out:
-      - id: scores
+      - id: results
+      - id: status
 
   email_score:
     run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/score_email.cwl
