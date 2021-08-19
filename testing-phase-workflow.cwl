@@ -120,6 +120,35 @@ steps:
         source: "#synapseConfig"
     out: [finished]
 
+  test_docker:
+    run: run_docker.cwl
+    in:
+      - id: docker_repository
+        source: "#get_docker_submission/docker_repository"
+      - id: docker_digest
+        source: "#get_docker_submission/docker_digest"
+      - id: submissionid
+        source: "#submissionId"
+      - id: docker_registry
+        source: "#get_docker_config/docker_registry"
+        # valueFrom: "docker.synapse.org"
+      - id: docker_authentication
+        source: "#get_docker_config/docker_authentication"
+      - id: parentid
+        source: "#submitterUploadSynId"
+      - id: synapse_config
+        source: "#synapseConfig"
+      - id: input_dir
+        source: "#get_evaluation_config/dataset_path"
+      - id: docker_script
+        default:
+          class: File
+          location: "run_docker.py"
+      - id: quota
+        source: "#get_evaluation_config/runtime"
+    out:
+      - id: predictions
+
   run_docker:
     run: run_docker.cwl
     in:
