@@ -17,7 +17,7 @@ def create_log_file(log_filename, log_text=None):
         if log_text is not None:
             if isinstance(log_text, bytes):
                 log_text = log_text.decode("utf-8")
-            log_file.write(log_text.encode("ascii", "ignore").decode("ascii"))
+            log_file.write(log_text.encode("ascii", "ignoref").decode("ascii"))
         else:
             log_file.write("No Logs")
 
@@ -139,7 +139,8 @@ def main(syn, args):
                                               detach=True, volumes=volumes,
                                               name=args.submissionid,
                                               network_disabled=True,
-                                              mem_limit='6g', stderr=True)
+                                              mem_limit='6g', stderr=True,
+                                              runtime="nvidia")
         except docker.errors.APIError as err:
             remove_docker_container(args.submissionid)
             errors = str(err) + "\n"
