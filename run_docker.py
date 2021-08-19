@@ -17,7 +17,7 @@ def create_log_file(log_filename, log_text=None):
         if log_text is not None:
             if isinstance(log_text, bytes):
                 log_text = log_text.decode("utf-8")
-            log_file.write(log_text.encode("ascii", "ignoref").decode("ascii"))
+            log_file.write(log_text.encode("ascii", "ignore").decode("ascii"))
         else:
             log_file.write("No Logs")
 
@@ -93,7 +93,7 @@ def main(syn, args):
     client.login(username=authen['username'],
                  password=authen['password'],
                  registry="https://docker.synapse.org")
-                 # dockercfg_path=".docker/config.json")
+    # dockercfg_path=".docker/config.json")
 
     print(getpass.getuser())
 
