@@ -52,7 +52,7 @@ requirements:
             sub_count_df = sub_count_df.sort_values('num')
             submit_to = sub_count_df['evaluationid'].iloc[0]
           else:
-            # Randomly choose queue that might be empty
+            # Randomly choose queue that doesn't have any queued submissions
             submit_to = scope_ids[~running_queues].sample().iloc[0]
 
           evaluation_dict = {"submit_to": str(submit_to)}
