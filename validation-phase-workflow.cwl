@@ -82,8 +82,6 @@ steps:
       - id: results
       - id: status
       - id: invalid_reasons
-      - id: predictions
-      - id: references
   
   email_validation:
     run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/validate_email.cwl
@@ -130,24 +128,14 @@ steps:
   score:
     run: score.cwl
     in:
-      - id: script
-        valueFrom: "compute_scores.sh"
-      - id: predictions
-        source: "#validate/predictions"
-      - id: goldstandard
-        source: "#validate/references"
-    out:
-      - id: scores
-
-  collect_scores:
-    run: compute_stats.cwl
-    in:
       - id: parent_id
         source: "#submitterUploadSynId"
       - id: synapse_config
         source: "#synapseConfig"
-      - id: scores
-        source: "#score/scores"
+      - id: input_file
+        source: "#download_submission/filepath"
+      - id: goldstandard
+        source: "#download_goldstandard/filepath"
       - id: check_validation_finished 
         source: "#check_status/finished"
     out:

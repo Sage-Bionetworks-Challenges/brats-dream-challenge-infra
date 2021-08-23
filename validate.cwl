@@ -8,7 +8,7 @@ baseCommand: validate.py
 
 hints:
   DockerRequirement:
-    dockerPull: docker.synapse.org/syn25829070/scoring:v4
+    dockerPull: docker.synapse.org/syn25829070/scoring:v3
 
 inputs:
   - id: input_file
@@ -27,8 +27,6 @@ arguments:
     prefix: -e
   - valueFrom: results.json
     prefix: -o
-  - valueFrom: tmpdir
-    prefix: -t
 
 requirements:
   - class: InlineJavascriptRequirement
@@ -52,13 +50,3 @@ outputs:
       glob: results.json
       loadContents: true
       outputEval: $(JSON.parse(self[0].contents)['submission_errors'])
-
-  - id: predictions
-    type: Directory
-    outputBinding:
-      glob: "tmpdir"
-
-  - id: references
-    type: Directory
-    outputBinding:
-      glob: "RSNA_ASNR_MICCAI_BraTS2021_ValidationGT"

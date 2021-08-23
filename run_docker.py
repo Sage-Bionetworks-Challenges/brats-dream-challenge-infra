@@ -93,7 +93,7 @@ def main(syn, args):
     client.login(username=authen['username'],
                  password=authen['password'],
                  registry="https://docker.synapse.org")
-                 # dockercfg_path=".docker/config.json")
+    # dockercfg_path=".docker/config.json")
 
     print(getpass.getuser())
 
@@ -139,7 +139,8 @@ def main(syn, args):
                                               detach=True, volumes=volumes,
                                               name=args.submissionid,
                                               network_disabled=True,
-                                              mem_limit='6g', stderr=True)
+                                              mem_limit='6g', stderr=True,
+                                              runtime="nvidia")
         except docker.errors.APIError as err:
             remove_docker_container(args.submissionid)
             errors = str(err) + "\n"
