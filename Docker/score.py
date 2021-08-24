@@ -64,7 +64,7 @@ def extract_metrics(tmp, scan_id):
                        "Sensitivity", "Specificity"])
         .filter(items=["ET", "WT", "TC"], axis=0)
         .reset_index()
-        .assign(scan_id=scan_id)
+        .assign(scan_id=f"BraTS2021_{scan_id}")
         .pivot(index="scan_id", columns="Labels")
     )
     res.columns = ["_".join(col).strip() for col in res.columns.values]
