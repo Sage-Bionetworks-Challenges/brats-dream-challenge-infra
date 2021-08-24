@@ -47,10 +47,10 @@ requirements:
           view_ent = syn.get(args.submission_viewid)
           scope_ids = pd.Series(view_ent.scopeIds).astype(int)
           # Do a quick query to make sure most up to date view
-          syn.tableQuery("select * from syn26125000 limit 1")
+          syn.tableQuery(f"select * from {args.submission_viewid} limit 1")
           # query submission view and determine which internal queue
           # to submit to
-          sub_count = syn.tableQuery(f"SELECT evaluationid, count(*) as num FROM {args.submission_viewid}  where status in ('RECEIVED','EVALUATION_IN_PROGRESS') group by evaluationid")
+          sub_count = syn.tableQuery(f"SELECT evaluationid, count(*) as num FROM {args.submission_viewid} where status in ('RECEIVED','EVALUATION_IN_PROGRESS') group by evaluationid")
           sub_count_df = sub_count.asDataFrame()
           running_queues = scope_ids.isin(sub_count_df['evaluationid'])
           if all(running_queues):
