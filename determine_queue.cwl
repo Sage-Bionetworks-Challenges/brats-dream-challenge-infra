@@ -13,11 +13,15 @@ hints:
 inputs:
   - id: synapse_config
     type: File
+  - id: submission_viewid
+    type: string
 
 arguments:
   - valueFrom: determine_queue.py
   - valueFrom: $(inputs.synapse_config.path)
     prefix: -c
+  - valueFrom: $(inputs.submission_viewid)
+    prefix: -s
 
 requirements:
   - class: InlineJavascriptRequirement
@@ -36,10 +40,11 @@ requirements:
 
           parser = argparse.ArgumentParser()
           parser.add_argument("-c", "--synapse_config", required=True, help="credentials file")
+          parser.add_argument("-s", "--submission_viewid", required=True, help="Submission View with evaluation IDs")
           args = parser.parse_args()
           syn = synapseclient.Synapse(configPath=args.synapse_config)
           syn.login()
-          view_ent = syn.get("syn26125000")
+          view_ent = syn.get(args.submission_viewid)
           scope_ids = pd.Series(view_ent.scopeIds).astype(int)
           # Do a quick query to make sure most up to date view
           syn.tableQuery("select * from syn26125000 limit 1")
