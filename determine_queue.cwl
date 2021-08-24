@@ -50,7 +50,7 @@ requirements:
           syn.tableQuery("select * from syn26125000 limit 1")
           # query submission view and determine which internal queue
           # to submit to
-          sub_count = syn.tableQuery("SELECT evaluationid, count(*) as num FROM syn26125000  where status in ('RECEIVED','EVALUATION_IN_PROGRESS') group by evaluationid")
+          sub_count = syn.tableQuery(f"SELECT evaluationid, count(*) as num FROM {args.submission_viewid}  where status in ('RECEIVED','EVALUATION_IN_PROGRESS') group by evaluationid")
           sub_count_df = sub_count.asDataFrame()
           running_queues = scope_ids.isin(sub_count_df['evaluationid'])
           if all(running_queues):
