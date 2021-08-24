@@ -1,6 +1,7 @@
 #!/usr/bin/env cwl-runner
 #
-# Internal workflow.  Runs on UW data
+# Internal workflow.  DOCKER SUBMISSION PHASE.
+# (9/1/2021 - 9/15/2021)
 #
 # Inputs:
 #   submissionId: ID of the Synapse submission to process
@@ -75,7 +76,7 @@ steps:
     run: https://raw.githubusercontent.com/Sage-Bionetworks-Workflows/dockstore-tool-synapse/v0.2/cwl/synapse-get-tool.cwl
     in:
       - id: synapseid
-        valueFrom: "syn26017031"
+        valueFrom: "syn26126823"
       - id: synapse_config
         source: "#synapseConfig"
     out:
@@ -120,35 +121,6 @@ steps:
         source: "#synapseConfig"
     out: [finished]
 
-  test_docker:
-    run: run_docker.cwl
-    in:
-      - id: docker_repository
-        source: "#get_docker_submission/docker_repository"
-      - id: docker_digest
-        source: "#get_docker_submission/docker_digest"
-      - id: submissionid
-        source: "#submissionId"
-      - id: docker_registry
-        source: "#get_docker_config/docker_registry"
-        # valueFrom: "docker.synapse.org"
-      - id: docker_authentication
-        source: "#get_docker_config/docker_authentication"
-      - id: parentid
-        source: "#submitterUploadSynId"
-      - id: synapse_config
-        source: "#synapseConfig"
-      - id: input_dir
-        source: "#get_evaluation_config/dataset_path"
-      - id: docker_script
-        default:
-          class: File
-          location: "run_docker.py"
-      - id: quota
-        source: "#get_evaluation_config/runtime"
-    out:
-      - id: predictions
-
   run_docker:
     run: run_docker.cwl
     in:
@@ -168,13 +140,13 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
       - id: input_dir
-        source: "#get_evaluation_config/dataset_path"
+        source: "/home/ec2-user/RSNA_ASNR_MICCAI_BraTS2021_Data_5Cases"
       - id: docker_script
         default:
           class: File
           location: "run_docker.py"
-      - id: quota
-        source: "#get_evaluation_config/runtime"
+      - id: runtime_quota
+        default: 240000
     out:
       - id: predictions
 

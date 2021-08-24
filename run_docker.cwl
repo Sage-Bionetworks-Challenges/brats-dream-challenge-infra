@@ -29,6 +29,8 @@ inputs:
     type: File
   - id: store
     type: boolean?
+  - id: runtime_quota
+    type: int
 
 arguments: 
   - valueFrom: $(inputs.docker_script.path)
@@ -48,6 +50,8 @@ arguments:
     prefix: -c
   - valueFrom: $(inputs.input_dir)
     prefix: -i
+  - valueFrom: $(inputs.runtime_quota)
+    prefix: -rt
 
 requirements:
   - class: InitialWorkDirRequirement
