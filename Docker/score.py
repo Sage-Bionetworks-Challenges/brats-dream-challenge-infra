@@ -112,7 +112,7 @@ def main():
     # segmentation that could not be scored, and number of segmentations
     # that were scored.
     cases_predicted = len(results.index)
-    flagged_cases = results.scan_id.str.count("\*").sum()
+    flagged_cases = results.scan_id.str.count(r"\*").sum()
     cases_evaluated = cases_predicted - flagged_cases
 
     results.loc["mean"] = results.mean()
@@ -132,7 +132,6 @@ def main():
     with open(args.output, "w") as out:
         out.write(json.dumps(
             {**results.loc["mean"].to_dict(),
-                "cases_predicted": cases_predicted,
                 "cases_evaluated": cases_evaluated,
                 "submission_scores": csv.id,
                 "submission_status": "SCORED"}
