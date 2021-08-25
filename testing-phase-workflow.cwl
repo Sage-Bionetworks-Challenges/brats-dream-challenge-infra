@@ -139,11 +139,11 @@ steps:
     run: validate.cwl
     in:
       - id: input_file
-        source: "#download_submission/filepath"
+        source: "#run_docker/predictions"
       - id: goldstandard
         source: "#download_goldstandard/filepath"
       - id: entity_type
-        source: "#download_submission/entity_type"
+        valueFrom: "FileEntity"
     out:
       - id: results
       - id: status
