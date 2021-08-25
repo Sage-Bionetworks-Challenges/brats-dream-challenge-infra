@@ -97,16 +97,6 @@ steps:
       - id: evaluation_id
       - id: results
 
-  download_goldstandard:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks-Workflows/dockstore-tool-synapse/v1.3/cwl/synapse-get-tool.cwl
-    in:
-      - id: synapseid
-        valueFrom: "syn26017031"
-      - id: synapse_config
-        source: "#synapseConfig"
-    out:
-      - id: filepath
-
   validate_docker:
     run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/validate_docker.cwl
     in:
