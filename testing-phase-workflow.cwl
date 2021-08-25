@@ -61,7 +61,7 @@ steps:
     run: https://raw.githubusercontent.com/Sage-Bionetworks-Workflows/dockstore-tool-synapse/v0.2/cwl/synapse-get-tool.cwl
     in:
       - id: synapseid
-        valueFrom: "syn26126823"
+        valueFrom: "syn26017031"
       - id: synapse_config
         source: "#synapseConfig"
     out:
@@ -125,13 +125,13 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
       - id: input_dir
-        source: "/home/ec2-user/RSNA_ASNR_MICCAI_BraTS2021_Data_5Cases"
+        source: "/home/ec2-user/RSNA_ASNR_MICCAI_BraTS2021_ValidationData_5Cases"
       - id: docker_script
         default:
           class: File
           location: "run_docker.py"
       - id: runtime_quota
-        default: 240000
+        default: 240
     out:
       - id: predictions
 
