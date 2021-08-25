@@ -124,17 +124,6 @@ def main(syn, args):
                 volumes[vol] = {'bind': mounted_volumes[vol].split(":")[0],
                                 'mode': mounted_volumes[vol].split(":")[1]}
 
-            # Look for if the container exists already, if so, reconnect
-            print("checking for containers")
-            container = None
-            errors = None
-            for cont in client.containers.list(all=True):
-                if args.submissionid in cont.name:
-                    # Must remove container if the container wasn't killed properly
-                    if cont.status == "exited":
-                        cont.remove()
-                    else:
-                        container = cont
             # If the container doesn't exist, make sure to run the docker image
             if container is None:
                 # Run as detached, logs will stream below
@@ -142,10 +131,11 @@ def main(syn, args):
                 start_time = time.time()
                 time_elapsed = 0
                 try:
+                    container_name = f"{args.subissionid}_case{case_id}"
                     container = client.containers.run(docker_image,
-                                                      detach=True, 
+                                                      detach=True,
                                                       volumes=volumes,
-                                                      name=args.submissionid,
+                                                      name=container_name,
                                                       network_disabled=True,
                                                       stderr=True,
                                                       runtime="nvidia")
