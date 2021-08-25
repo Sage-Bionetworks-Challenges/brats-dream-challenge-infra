@@ -250,7 +250,7 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
       - id: input_file
-        source: "#download_submission/filepath"
+        source: "#run_docker/predictions"
       - id: goldstandard
         source: "#download_goldstandard/filepath"
       - id: check_validation_finished
@@ -260,7 +260,7 @@ steps:
       - id: status
 
   email_score:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/score_email.cwl
+    run: score_email.cwl
     in:
       - id: submissionid
         source: "#get_submissionid/submissionid"
