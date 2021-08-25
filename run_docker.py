@@ -143,10 +143,11 @@ def main(syn, args):
                 time_elapsed = 0
                 try:
                     container = client.containers.run(docker_image,
-                                                      detach=True, volumes=volumes,
+                                                      detach=True, 
+                                                      volumes=volumes,
                                                       name=args.submissionid,
                                                       network_disabled=True,
-                                                      mem_limit='6g', stderr=True,
+                                                      stderr=True,
                                                       runtime="nvidia")
                 except docker.errors.APIError as err:
                     remove_docker_container(args.submissionid)
