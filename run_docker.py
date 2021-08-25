@@ -108,6 +108,7 @@ def main(syn, args):
     for root, sub_dirs, _ in os.walk(input_dir):
         for sub_dir in sub_dirs:
             case_folder = os.path.join(root, sub_dir)
+            case_id = case_folder[-5:]
 
             print("mounting volumes")
             # These are the locations on the docker that you want your mounted
@@ -138,13 +139,14 @@ def main(syn, args):
             if container is None:
                 # Run as detached, logs will stream below
                 print("running container")
+                start_time = time.time()
+                time_elapsed = 0
                 try:
                     container = client.containers.run(docker_image,
                                                       detach=True, volumes=volumes,
                                                       name=args.submissionid,
                                                       network_disabled=True,
                                                       mem_limit='6g', stderr=True,
-                                                      cpu_rt_runtime=args.runtime_quota,
                                                       runtime="nvidia")
                 except docker.errors.APIError as err:
                     remove_docker_container(args.submissionid)
@@ -161,13 +163,30 @@ def main(syn, args):
             if container is not None:
                 # Check if container is still running
                 while container in client.containers.list():
+
+                    # Check the elapsed time for the docker run; if over the
+                    # runtime quota, stop the container.
+                    time_elapsed = time.time() - start_time
+                    if time_elapsed > args.runtime_quota:
+                        container.stop()
+                        break
+
                     log_text = container.logs()
                     create_log_file(log_filename, log_text=log_text)
                     store_log_file(syn, log_filename,
                                    args.parentid, store=args.store)
                     time.sleep(60)
-                # Must run again to make sure all the logs are captured
-                log_text = container.logs()
+
+                # Note the reason for container exit in the logs if time
+                # limit is reached.
+                if time_elapsed > args.runtime_quota:
+                    log_text = (f"Time limit of {args.runtime_quota}s reached"
+                                f"for case {case_id} - exiting submission...")
+
+                else:
+                    # Must run again to make sure all the logs are captured
+                    log_text = container.logs()
+
                 create_log_file(log_filename, log_text=log_text)
                 store_log_file(syn, log_filename,
                                args.parentid, store=args.store)
@@ -210,7 +229,7 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--synapse_config", required=True,
                         help="credentials file")
     parser.add_argument("-rt", "--runtime_quota",
-                        help="runtime quota in milliseconds")
+                        help="runtime quota in seconds")
     parser.add_argument("--store", action='store_true',
                         help="to store logs")
     parser.add_argument("--parentid", required=True,
