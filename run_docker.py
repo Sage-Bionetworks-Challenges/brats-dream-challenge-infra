@@ -63,7 +63,6 @@ def tar(directory, tar_filename):
     """
     with tarfile.open(tar_filename, "w") as tar_o:
         tar_o.add(directory)
-    # TODO: Potentially add code to remove all files that were zipped.
 
 
 def untar(directory, tar_filename):
@@ -93,70 +92,64 @@ def main(syn, args):
     client.login(username=authen['username'],
                  password=authen['password'],
                  registry="https://docker.synapse.org")
-    # dockercfg_path=".docker/config.json")
 
     print(getpass.getuser())
 
-    # Add docker.config file
+    # Get Docker image to run and volumes to be mounted.
     docker_image = args.docker_repository + "@" + args.docker_digest
-
-    # These are the volumes that you want to mount onto your docker container
-    #output_dir = os.path.join(os.getcwd(), "output")
     output_dir = os.getcwd()
-    input_dir = args.input_dir
 
-    for root, sub_dirs, _ in os.walk(input_dir):
+    # For the input directory, there will be a different case folder per
+    # Docker run, e.g. /path/to/BraTS2021_00001, /path/to/BraTS2021_00013,
+    # etc. In total, there will be 5 Docker runs for the validation data,
+    # 500 for the testing data.
+    for root, sub_dirs, _ in os.walk(args.input_dir):
         for sub_dir in sub_dirs:
             case_folder = os.path.join(root, sub_dir)
             case_id = case_folder[-5:]
 
             print("mounting volumes")
-            # These are the locations on the docker that you want your mounted
-            # volumes to be + permissions in docker (ro, rw)
-            # It has to be in this format '/output:rw'
+
+            # Specify the input directory with 'ro' permissions, output with
+            # 'rw' permissions.
             mounted_volumes = {output_dir: '/output:rw',
                                case_folder: '/input:ro'}
-            # All mounted volumes here in a list
+
+            # Format the mounted volumes so that Docker SDK can understand.
             all_volumes = [output_dir, case_folder]
-            # Mount volumes
             volumes = {}
             for vol in all_volumes:
                 volumes[vol] = {'bind': mounted_volumes[vol].split(":")[0],
                                 'mode': mounted_volumes[vol].split(":")[1]}
 
-            # If the container doesn't exist, make sure to run the docker image
-            if container is None:
-                # Run as detached, logs will stream below
-                print("running container")
-                start_time = time.time()
-                time_elapsed = 0
-                try:
-                    container_name = f"{args.subissionid}_case{case_id}"
-                    container = client.containers.run(docker_image,
-                                                      detach=True,
-                                                      volumes=volumes,
-                                                      name=container_name,
-                                                      network_disabled=True,
-                                                      stderr=True,
-                                                      runtime="nvidia")
-                except docker.errors.APIError as err:
-                    remove_docker_container(args.submissionid)
-                    errors = str(err) + "\n"
+            # Run the Docker container in detached mode and with access
+            # to the GPU, also making note of the start time.
+            print("running container")
+            start_time = time.time()
+            time_elapsed = 0
+            try:
+                container_name = f"{args.subissionid}_case{case_id}"
+                container = client.containers.run(docker_image,
+                                                  detach=True,
+                                                  volumes=volumes,
+                                                  name=container_name,
+                                                  network_disabled=True,
+                                                  stderr=True,
+                                                  runtime="nvidia")
+            except docker.errors.APIError as err:
+                remove_docker_container(args.submissionid)
+                errors = str(err) + "\n"
 
+            # Create a logfile to catch stdout/stderr from the Docker run.
             print("creating logfile")
-            # Create the logfile
             log_filename = args.submissionid + "_log.txt"
-            # Open log file first
             open(log_filename, 'w').close()
 
-            # If the container doesn't exist, there are no logs to write out and
-            # no container to remove
+            # If container is running, monitor the time elapsed -- if it
+            # exceeds the runtime quota, stop the container. Logs should
+            # also be captured every 60 seconds.  Remove the container
             if container is not None:
-                # Check if container is still running
                 while container in client.containers.list():
-
-                    # Check the elapsed time for the docker run; if over the
-                    # runtime quota, stop the container.
                     time_elapsed = time.time() - start_time
                     if time_elapsed > args.runtime_quota:
                         container.stop()
@@ -181,31 +174,28 @@ def main(syn, args):
                 create_log_file(log_filename, log_text=log_text)
                 store_log_file(syn, log_filename,
                                args.parentid, store=args.store)
-                # Remove container and image after being done
                 container.remove()
 
             statinfo = os.stat(log_filename)
-
             if statinfo.st_size == 0:
                 create_log_file(log_filename, log_text=errors)
                 store_log_file(syn, log_filename,
                                args.parentid, store=args.store)
-
     print("finished training")
-    # Try to remove the image
     remove_docker_image(docker_image)
 
-    if not glob.glob("*.nii.gz"):
+    # Check for prediction files once the Docker run is complete. Tar
+    # the predictions if found; else, mark the submission as INVALID.
+    if glob.glob("*.nii.gz"):
+        os.mkdir(f"predictions")
+        for nifti in glob.glob("*.nii.gz"):
+            os.rename(nifti, os.path.join("predictions", nifti))
+        tar("predictions", "predictions.tar.gz")
+    else:
         raise Exception(
-            "No *.nii.gz files found; please check whether running the Docker "
-            "container locally will result in a NIfTI file."
+            "No *.nii.gz files found; please check whether running the "
+            "Docker container locally will result in a NIfTI file."
         )
-
-    # Create directory of prediction files to tar.
-    os.mkdir(f"predictions")
-    for nifti in glob.glob("*.nii.gz"):
-        os.rename(nifti, os.path.join("predictions", nifti))
-    tar("predictions", "predictions.tar.gz")
 
 
 if __name__ == '__main__':
