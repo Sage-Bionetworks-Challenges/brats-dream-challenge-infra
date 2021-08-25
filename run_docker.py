@@ -181,7 +181,7 @@ def main(syn, args):
                 # limit is reached.
                 if time_elapsed > args.runtime_quota:
                     log_text = (f"Time limit of {args.runtime_quota}s reached"
-                                f"for case {case_id} - exiting submission...")
+                                f"for case {case_id} - no output generated.")
 
                 else:
                     # Must run again to make sure all the logs are captured
