@@ -204,16 +204,17 @@ def main(syn, args):
     # Try to remove the image
     remove_docker_image(docker_image)
 
-    output_folder = os.listdir(output_dir)
-    if not output_folder:
-        raise Exception("No '*.nii.gz' file written to /data/results, "
-                        "please check inference docker")
-    elif not glob.glob(f"{output_folder}/*.nii.gz"):
-        raise Exception("No '*.nii.gz' file written to /data/results, "
-                        "please check inference docker")
-    # CWL has a limit of the array of files it can accept in a folder
-    # therefore creating a tarball is sometimes necessary
-    # tar(output_dir, 'outputs.tar.gz')
+    if not glob.glob("*.nii.gz"):
+        raise Exception(
+            "No *.nii.gz files found; please check whether running the Docker "
+            "container locally will result in a NIfTI file."
+        )
+
+    # Create directory of prediction files to tar.
+    os.mkdir(f"predictions")
+    for nifti in glob.glob("*.nii.gz"):
+        os.rename(nifti, os.path.join("predictions", nifti))
+    tar("predictions", "predictions.tar.gz")
 
 
 if __name__ == '__main__':
