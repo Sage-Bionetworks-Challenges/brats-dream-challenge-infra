@@ -112,8 +112,15 @@ def main(syn, args):
 
             # Specify the input directory with 'ro' permissions, output with
             # 'rw' permissions.
-            mounted_volumes = {output_dir: '/output:rw',
-                               case_folder: '/input:ro'}
+            # mounted_volumes = {output_dir: '/output:rw',
+            #                    case_folder: '/input:ro'}
+
+            # FOR NOW: stress-test with these mounted directories, which are
+            #          expected in last year's models.
+            mounted_volumes = {
+                output_dir: '/data/results:rw',
+                case_folder: '/data:rw'
+            }
 
             # Format the mounted volumes so that Docker SDK can understand.
             all_volumes = [output_dir, case_folder]
