@@ -190,7 +190,6 @@ def main(syn, args):
                 store_log_file(syn, log_filename,
                                args.parentid, store=args.store)
     print("finished inference")
-    print(errors)
     remove_docker_image(docker_image)
 
     # Check for prediction files once the Docker run is complete. Tar
