@@ -144,7 +144,8 @@ def main(syn, args):
                                                   stderr=True,
                                                   runtime="nvidia")
             except docker.errors.APIError as err:
-                remove_docker_container(args.submissionid)
+                remove_docker_container(container_name)
+                print(str(err))
                 errors = str(err) + "\n"
 
             # Create a logfile to catch stdout/stderr from the Docker run.
@@ -188,7 +189,8 @@ def main(syn, args):
                 create_log_file(log_filename, log_text=errors)
                 store_log_file(syn, log_filename,
                                args.parentid, store=args.store)
-    print("finished training")
+    print("finished inference")
+    print(errors)
     remove_docker_image(docker_image)
 
     # Check for prediction files once the Docker run is complete. Tar
