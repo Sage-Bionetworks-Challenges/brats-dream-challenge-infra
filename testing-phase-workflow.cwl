@@ -134,6 +134,8 @@ steps:
           location: "run_docker.py"
       - id: runtime_quota
         default: 240
+      - id: store
+        default: True
     out:
       - id: predictions
 
