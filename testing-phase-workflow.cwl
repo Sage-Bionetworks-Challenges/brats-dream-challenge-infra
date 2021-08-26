@@ -183,8 +183,6 @@ steps:
       - id: results
       - id: status
       - id: invalid_reasons
-      - id: predictions
-      - id: references
   
   email_validation:
     run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/validate_email.cwl
