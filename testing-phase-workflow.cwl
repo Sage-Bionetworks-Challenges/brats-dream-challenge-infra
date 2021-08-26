@@ -135,7 +135,7 @@ steps:
       - id: runtime_quota
         default: 240
       - id: store
-        deafult: True
+        default: True
     out:
       - id: predictions
 
