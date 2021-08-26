@@ -69,7 +69,9 @@ requirements:
             o.write(json.dumps(result))
 
           submitterid = sub['userId'] if sub.get("teamId") is None else sub['teamId'] 
-          userids = {'main_userid': sub.userId, 'main_submitterId': submitterid}
+          userids = {'main_userid': sub.userId, 'main_submitterId': submitterid,
+                     'docker_repository': sub.get("dockerRepositoryName",""),
+                     'docker_digest': sub.get("dockerDigest","")}
           with open(args.output, 'w') as o:
             o.write(json.dumps(userids))
 
