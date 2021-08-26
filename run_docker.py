@@ -110,8 +110,16 @@ def main(syn, args):
     # Docker run, e.g. /path/to/BraTS2021_00001, /path/to/BraTS2021_00013,
     # etc. In total, there will be 5 Docker runs for the validation data,
     # 500 for the testing data.
-    for sub_dir in os.listdir(input_dir):
-        case_folder = os.path.join(input_dir, sub_dir)
+    # Need to hardcode case folder path because workflow is run in toil container
+    case_folders = [
+        "/home/ec2-user/RSNA_ASNR_MICCAI_BraTS2021_ValidationData_5Cases/BraTS2021_00001",
+        "/home/ec2-user/RSNA_ASNR_MICCAI_BraTS2021_ValidationData_5Cases/BraTS2021_00013",
+        "/home/ec2-user/RSNA_ASNR_MICCAI_BraTS2021_ValidationData_5Cases/BraTS2021_00015",
+        "/home/ec2-user/RSNA_ASNR_MICCAI_BraTS2021_ValidationData_5Cases/BraTS2021_00027",
+        "/home/ec2-user/RSNA_ASNR_MICCAI_BraTS2021_ValidationData_5Cases/BraTS2021_00037"
+    ]
+    for case_folder in case_folders:
+        # case_folder = os.path.join(input_dir, sub_dir)
         case_id = case_folder[-5:]
 
         print("mounting volumes")
