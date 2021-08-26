@@ -191,8 +191,7 @@ def main(syn, args):
             store_log_file(syn, log_filename,
                            args.parentid, store=args.store)
     if warnings:
-        warnings_text = ("\n\nWarnings:\n========="
-                         "\n".join(warnings))
+        warnings_text = "\n\nWarnings:\n=========" + "\n".join(warnings)
         create_log_file(log_filename, log_text=warnings_text, mode="a")
         store_log_file(syn, log_filename,
                        args.parentid, store=args.store)
