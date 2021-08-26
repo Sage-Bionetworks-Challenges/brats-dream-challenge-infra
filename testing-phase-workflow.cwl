@@ -125,7 +125,7 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
       - id: input_dir
-        source: "/home/ec2-user/RSNA_ASNR_MICCAI_BraTS2021_ValidationData_5Cases"
+        valueFrom: "/home/ec2-user/RSNA_ASNR_MICCAI_BraTS2021_ValidationData_5Cases"
       - id: docker_script
         default:
           class: File
