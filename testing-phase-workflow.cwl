@@ -267,7 +267,7 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
       - id: results
-        source: "#score/scores"
+        source: "#score/results"
     out: []
 
   annotate_main_submission_with_scores:
