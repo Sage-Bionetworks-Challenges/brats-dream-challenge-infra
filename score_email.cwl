@@ -73,20 +73,14 @@ requirements:
                   message = "Your submission has been scored. Results will be announced at a later time."
               else:
                   message = ["Hello %s,\n\n" % name,
-                             "Your submission (ID: %s) has been scored and below are the metric averages:\n\n" % sub.id,
+                             "Your submission (id: %s) has been scored and below are the metric averages:\n\n" % sub.id,
                              "\n".join([i + " : " + str(annots[i]) for i in annots]),
                              "\nTo look at each scan's score, go here: https://www.synapse.org/#!Synapse:%s" %csv_id,
                              "\n\nSincerely,\nChallenge Administrator"]
-          else:
-            subject = "Submission to '%s' not scored!" % evaluation.name
-            message = ["Hello %s,\n\n" % name,
-                        "Your submission (ID: %s) has encountered an error during scoring.\n\n" % sub.id,
-                        "Please ask a Challenge Organizer for more information regarding your submission, using Submission ID %s as a reference number." % sub.id,
-                        "\n\nSincerely,\nChallenge Administrator"]
-          syn.sendMessage(
-              userIds=[participantid],
-              messageSubject=subject,
-              messageBody="".join(message))
+              syn.sendMessage(
+                  userIds=[participantid],
+                  messageSubject=subject,
+                  messageBody="".join(message))
           
 outputs:
 - id: finished

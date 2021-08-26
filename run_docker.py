@@ -63,7 +63,6 @@ def tar(directory, tar_filename):
     """
     with tarfile.open(tar_filename, "w") as tar_o:
         tar_o.add(directory)
-    # TODO: Potentially add code to remove all files that were zipped.
 
 
 def untar(directory, tar_filename):
@@ -93,100 +92,117 @@ def main(syn, args):
     client.login(username=authen['username'],
                  password=authen['password'],
                  registry="https://docker.synapse.org")
-    # dockercfg_path=".docker/config.json")
 
     print(getpass.getuser())
 
-    # Add docker.config file
+    # Get Docker image to run and volumes to be mounted.
     docker_image = args.docker_repository + "@" + args.docker_digest
-
-    # These are the volumes that you want to mount onto your docker container
-    #output_dir = os.path.join(os.getcwd(), "output")
     output_dir = os.getcwd()
-    input_dir = args.input_dir
 
-    print("mounting volumes")
-    # These are the locations on the docker that you want your mounted
-    # volumes to be + permissions in docker (ro, rw)
-    # It has to be in this format '/output:rw'
-    mounted_volumes = {output_dir: '/data/results:rw',
-                       input_dir: '/data:ro'}
-    # All mounted volumes here in a list
-    all_volumes = [output_dir, input_dir]
-    # Mount volumes
-    volumes = {}
-    for vol in all_volumes:
-        volumes[vol] = {'bind': mounted_volumes[vol].split(":")[0],
-                        'mode': mounted_volumes[vol].split(":")[1]}
+    # For the input directory, there will be a different case folder per
+    # Docker run, e.g. /path/to/BraTS2021_00001, /path/to/BraTS2021_00013,
+    # etc. In total, there will be 5 Docker runs for the validation data,
+    # 500 for the testing data.
+    for root, sub_dirs, _ in os.walk(args.input_dir):
+        for sub_dir in sub_dirs:
+            case_folder = os.path.join(root, sub_dir)
+            case_id = case_folder[-5:]
 
-    # Look for if the container exists already, if so, reconnect
-    print("checking for containers")
-    container = None
-    errors = None
-    for cont in client.containers.list(all=True):
-        if args.submissionid in cont.name:
-            # Must remove container if the container wasn't killed properly
-            if cont.status == "exited":
-                cont.remove()
-            else:
-                container = cont
-    # If the container doesn't exist, make sure to run the docker image
-    if container is None:
-        # Run as detached, logs will stream below
-        print("running container")
-        try:
-            container = client.containers.run(docker_image,
-                                              detach=True, volumes=volumes,
-                                              name=args.submissionid,
-                                              network_disabled=True,
-                                              mem_limit='6g', stderr=True,
-                                              runtime="nvidia")
-        except docker.errors.APIError as err:
-            remove_docker_container(args.submissionid)
-            errors = str(err) + "\n"
+            print("mounting volumes")
 
-    print("creating logfile")
-    # Create the logfile
-    log_filename = args.submissionid + "_log.txt"
-    # Open log file first
-    open(log_filename, 'w').close()
+            # Specify the input directory with 'ro' permissions, output with
+            # 'rw' permissions.
+            # mounted_volumes = {output_dir: '/output:rw',
+            #                    case_folder: '/input:ro'}
 
-    # If the container doesn't exist, there are no logs to write out and
-    # no container to remove
-    if container is not None:
-        # Check if container is still running
-        while container in client.containers.list():
-            log_text = container.logs()
-            create_log_file(log_filename, log_text=log_text)
-            store_log_file(syn, log_filename, args.parentid, store=args.store)
-            time.sleep(60)
-        # Must run again to make sure all the logs are captured
-        log_text = container.logs()
-        create_log_file(log_filename, log_text=log_text)
-        store_log_file(syn, log_filename, args.parentid, store=args.store)
-        # Remove container and image after being done
-        container.remove()
+            # FOR NOW: stress-test with these mounted directories, which are
+            #          expected in last year's models.
+            mounted_volumes = {
+                output_dir: '/data/results:rw',
+                case_folder: '/data:rw'
+            }
 
-    statinfo = os.stat(log_filename)
+            # Format the mounted volumes so that Docker SDK can understand.
+            all_volumes = [output_dir, case_folder]
+            volumes = {}
+            for vol in all_volumes:
+                volumes[vol] = {'bind': mounted_volumes[vol].split(":")[0],
+                                'mode': mounted_volumes[vol].split(":")[1]}
 
-    if statinfo.st_size == 0:
-        create_log_file(log_filename, log_text=errors)
-        store_log_file(syn, log_filename, args.parentid, store=args.store)
+            # Run the Docker container in detached mode and with access
+            # to the GPU, also making note of the start time.
+            print("running container")
+            start_time = time.time()
+            time_elapsed = 0
+            try:
+                container_name = f"{args.subissionid}_case{case_id}"
+                container = client.containers.run(docker_image,
+                                                  detach=True,
+                                                  volumes=volumes,
+                                                  name=container_name,
+                                                  network_disabled=True,
+                                                  stderr=True,
+                                                  runtime="nvidia")
+            except docker.errors.APIError as err:
+                remove_docker_container(args.submissionid)
+                errors = str(err) + "\n"
 
+            # Create a logfile to catch stdout/stderr from the Docker run.
+            print("creating logfile")
+            log_filename = args.submissionid + "_log.txt"
+            open(log_filename, 'w').close()
+
+            # If container is running, monitor the time elapsed -- if it
+            # exceeds the runtime quota, stop the container. Logs should
+            # also be captured every 60 seconds.  Remove the container
+            if container is not None:
+                while container in client.containers.list():
+                    time_elapsed = time.time() - start_time
+                    if time_elapsed > args.runtime_quota:
+                        container.stop()
+                        break
+
+                    log_text = container.logs()
+                    create_log_file(log_filename, log_text=log_text)
+                    store_log_file(syn, log_filename,
+                                   args.parentid, store=args.store)
+                    time.sleep(60)
+
+                # Note the reason for container exit in the logs if time
+                # limit is reached.
+                if time_elapsed > args.runtime_quota:
+                    log_text = (f"Time limit of {args.runtime_quota}s reached"
+                                f"for case {case_id} - no output generated.")
+
+                else:
+                    # Must run again to make sure all the logs are captured
+                    log_text = container.logs()
+
+                create_log_file(log_filename, log_text=log_text)
+                store_log_file(syn, log_filename,
+                               args.parentid, store=args.store)
+                container.remove()
+
+            statinfo = os.stat(log_filename)
+            if statinfo.st_size == 0:
+                create_log_file(log_filename, log_text=errors)
+                store_log_file(syn, log_filename,
+                               args.parentid, store=args.store)
     print("finished training")
-    # Try to remove the image
     remove_docker_image(docker_image)
 
-    output_folder = os.listdir(output_dir)
-    if not output_folder:
-        raise Exception("No '*.nii.gz' file written to /data/results, "
-                        "please check inference docker")
-    elif not glob.glob(f"{output_folder}/*.nii.gz"):
-        raise Exception("No '*.nii.gz' file written to /data/results, "
-                        "please check inference docker")
-    # CWL has a limit of the array of files it can accept in a folder
-    # therefore creating a tarball is sometimes necessary
-    # tar(output_dir, 'outputs.tar.gz')
+    # Check for prediction files once the Docker run is complete. Tar
+    # the predictions if found; else, mark the submission as INVALID.
+    if glob.glob("*.nii.gz"):
+        os.mkdir("predictions")
+        for nifti in glob.glob("*.nii.gz"):
+            os.rename(nifti, os.path.join("predictions", nifti))
+        tar("predictions", "predictions.tar.gz")
+    else:
+        raise Exception(
+            "No *.nii.gz files found; please check whether running the "
+            "Docker container locally will result in a NIfTI file."
+        )
 
 
 if __name__ == '__main__':
@@ -201,6 +217,8 @@ if __name__ == '__main__':
                         help="Input Directory")
     parser.add_argument("-c", "--synapse_config", required=True,
                         help="credentials file")
+    parser.add_argument("-rt", "--runtime_quota",
+                        help="runtime quota in seconds")
     parser.add_argument("--store", action='store_true',
                         help="to store logs")
     parser.add_argument("--parentid", required=True,

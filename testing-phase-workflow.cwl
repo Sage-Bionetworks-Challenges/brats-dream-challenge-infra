@@ -57,26 +57,11 @@ steps:
       - id: evaluation_id
       - id: results
 
-  annotate_internal_submission:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/annotate_submission.cwl
-    in:
-      - id: submissionid
-        source: "#submissionId"
-      - id: annotation_values
-        source: "#get_evaluation_config/config"
-      - id: to_public
-        default: true
-      - id: force
-        default: true
-      - id: synapse_config
-        source: "#synapseConfig"
-    out: [finished]
-
   download_goldstandard:
     run: https://raw.githubusercontent.com/Sage-Bionetworks-Workflows/dockstore-tool-synapse/v0.2/cwl/synapse-get-tool.cwl
     in:
       - id: synapseid
-        valueFrom: "syn26126823"
+        valueFrom: "syn26017031"
       - id: synapse_config
         source: "#synapseConfig"
     out:
@@ -140,25 +125,60 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
       - id: input_dir
-        source: "/home/ec2-user/RSNA_ASNR_MICCAI_BraTS2021_Data_5Cases"
+        source: "/home/ec2-user/RSNA_ASNR_MICCAI_BraTS2021_ValidationData_5Cases"
       - id: docker_script
         default:
           class: File
           location: "run_docker.py"
       - id: runtime_quota
-        default: 240000
+        default: 240
     out:
       - id: predictions
+
+  upload_results:
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/upload_to_synapse.cwl
+    in:
+      - id: infile
+        source: "#run_docker/predictions"
+      - id: parentid
+        source: "#adminUploadSynId"
+      - id: used_entity
+        source: "#get_docker_submission/entity_id"
+      - id: executed_entity
+        source: "#workflowSynapseId"
+      - id: synapse_config
+        source: "#synapseConfig"
+    out:
+      - id: uploaded_fileid
+      - id: uploaded_file_version
+      - id: results
+
+  annotate_docker_upload_results:
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/annotate_submission.cwl
+    in:
+      - id: submissionid
+        source: "#submissionId"
+      - id: annotation_values
+        source: "#upload_results/results"
+      - id: to_public
+        default: true
+      - id: force
+        default: true
+      - id: synapse_config
+        source: "#synapseConfig"
+      - id: previous_annotation_finished
+        source: "#annotate_docker_validation_with_output/finished"
+    out: [finished]
 
   validate:
     run: validate.cwl
     in:
       - id: input_file
-        source: "#download_submission/filepath"
+        source: "#run_docker/predictions"
       - id: goldstandard
         source: "#download_goldstandard/filepath"
       - id: entity_type
-        source: "#download_submission/entity_type"
+        valueFrom: "FileEntity"
     out:
       - id: results
       - id: status
@@ -230,7 +250,7 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
       - id: input_file
-        source: "#download_submission/filepath"
+        source: "#run_docker/predictions"
       - id: goldstandard
         source: "#download_goldstandard/filepath"
       - id: check_validation_finished
@@ -240,7 +260,7 @@ steps:
       - id: status
 
   email_score:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/score_email.cwl
+    run: score_email.cwl
     in:
       - id: submissionid
         source: "#get_submissionid/submissionid"
