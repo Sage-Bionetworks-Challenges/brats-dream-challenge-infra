@@ -122,6 +122,8 @@ steps:
         source: "#get_docker_config/docker_authentication"
       - id: parentid
         source: "#submitterUploadSynId"
+      - id: status
+        valueFrom: "VALIDATED"
       - id: synapse_config
         source: "#synapseConfig"
       - id: input_dir
