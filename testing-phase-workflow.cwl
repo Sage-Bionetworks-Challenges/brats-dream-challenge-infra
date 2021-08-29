@@ -1,13 +1,14 @@
 #!/usr/bin/env cwl-runner
 #
-# Workflow for SC1
+# Internal workflow.  DOCKER SUBMISSION PHASE.
+# (9/1/2021 - 9/15/2021)
+#
 # Inputs:
-#   submissionId: Submission ID to run this workflow on
-#   adminUploadSynId: Synapse ID of Folder accessible by admin user/team
-#   submitterUploadSynId: Synapse ID of Folder accessible by submitter
-#   workflowSynapseId: Synapse ID of File that links to workflow archive
-#   synapseConfig: filepath to .synapseConfig file
-
+#   submissionId: ID of the Synapse submission to process
+#   adminUploadSynId: ID of a folder accessible only to the submission queue administrator
+#   submitterUploadSynId: ID of a folder accessible to the submitter
+#   workflowSynapseId:  ID of the Synapse entity containing a reference to the workflow file(s)
+#
 cwlVersion: v1.0
 class: Workflow
 
@@ -26,17 +27,16 @@ inputs:
   - id: synapseConfig
     type: File
 
-# No output; everything is uploaded to Synapse.
+# there are no output at the workflow engine level.  Everything is uploaded to Synapse
 outputs: []
 
 steps:
 
   set_submitter_folder_permissions:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/set_permissions.cwl
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/set_permissions.cwl
     in:
       - id: entityid
         source: "#submitterUploadSynId"
-      # TODO: replace `valueFrom` with the admin user ID or admin team ID
       - id: principalid
         valueFrom: "3427583"
       - id: permissions
@@ -45,37 +45,30 @@ steps:
         source: "#synapseConfig"
     out: []
 
-  set_admin_folder_permissions:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/set_permissions.cwl
-    in:
-      - id: entityid
-        source: "#adminUploadSynId"
-      # TODO: replace `valueFrom` with the admin user ID or admin team ID
-      - id: principalid
-        valueFrom: "3427583"
-      - id: permissions
-        valueFrom: "download"
-      - id: synapse_config
-        source: "#synapseConfig"
-    out: []
-
-  get_docker_submission:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/get_submission.cwl
+  get_submissionid:
+    run: get_linked_submissionid.cwl
     in:
       - id: submissionid
         source: "#submissionId"
       - id: synapse_config
         source: "#synapseConfig"
     out:
-      - id: filepath
-      - id: docker_repository
-      - id: docker_digest
-      - id: entity_id
-      - id: entity_type
+      - id: submissionid
+      - id: evaluation_id
       - id: results
 
+  download_goldstandard:
+    run: https://raw.githubusercontent.com/Sage-Bionetworks-Workflows/dockstore-tool-synapse/v0.2/cwl/synapse-get-tool.cwl
+    in:
+      - id: synapseid
+        valueFrom: "syn26017031"
+      - id: synapse_config
+        source: "#synapseConfig"
+    out:
+      - id: filepath
+
   get_docker_config:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/get_docker_config.cwl
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/get_docker_config.cwl
     in:
       - id: synapse_config
         source: "#synapseConfig"
@@ -83,69 +76,34 @@ steps:
       - id: docker_registry
       - id: docker_authentication
 
-  download_goldstandard:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks-Workflows/cwl-tool-synapseclient/v1.4/cwl/synapse-get-tool.cwl
-    in:
-      # TODO: replace `valueFrom` with the Synapse ID to the challenge goldstandard
-      - id: synapseid
-        valueFrom: "syn18081597"
-      - id: synapse_config
-        source: "#synapseConfig"
-    out:
-      - id: filepath
-
-  validate_docker:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/validate_docker.cwl
+  get_docker_submission:
+    run: get_submission_docker.cwl
     in:
       - id: submissionid
-        source: "#submissionId"
+        source: "#get_submissionid/submissionid"
       - id: synapse_config
         source: "#synapseConfig"
     out:
+      - id: docker_repository
+      - id: docker_digest
+      - id: entity_id
       - id: results
-      - id: status
-      - id: invalid_reasons
+      - id: admin_synid
+      - id: submitter_synid
 
-  email_docker_validation:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/validate_email.cwl
-    in:
-      - id: submissionid
-        source: "#submissionId"
-      - id: synapse_config
-        source: "#synapseConfig"
-      - id: status
-        source: "#validate_docker/status"
-      - id: invalid_reasons
-        source: "#validate_docker/invalid_reasons"
-      # OPTIONAL: set `default` to `false` if email notification about valid submission is needed
-      - id: errors_only
-        default: true
-    out: [finished]
-
-  annotate_docker_validation_with_output:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/annotate_submission.cwl
+  annotate_submission_main_submitter:
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/annotate_submission.cwl
     in:
       - id: submissionid
         source: "#submissionId"
       - id: annotation_values
-        source: "#validate_docker/results"
+        source: "#get_docker_submission/results"
       - id: to_public
         default: true
-      - id: force_change_annotation_acl
+      - id: force
         default: true
       - id: synapse_config
         source: "#synapseConfig"
-    out: [finished]
-
-  check_docker_status:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/check_status.cwl
-    in:
-      - id: status
-        source: "#validate_docker/status"
-      - id: previous_annotation_finished
-        source: "#annotate_docker_validation_with_output/finished"
-      - id: previous_email_finished
-        source: "#email_docker_validation/finished"
     out: [finished]
 
   run_docker:
@@ -159,24 +117,25 @@ steps:
         source: "#submissionId"
       - id: docker_registry
         source: "#get_docker_config/docker_registry"
+        # valueFrom: "docker.synapse.org"
       - id: docker_authentication
         source: "#get_docker_config/docker_authentication"
-      - id: status
-        source: "#validate_docker/status"
       - id: parentid
         source: "#submitterUploadSynId"
+      - id: status
+        valueFrom: "VALIDATED"
       - id: synapse_config
         source: "#synapseConfig"
-      # OPTIONAL: set `default` to `false` if log file should not be uploaded to Synapse
-      - id: store
-        default: true
-      # TODO: replace `valueFrom` with the absolute path to the data directory to be mounted
       - id: input_dir
-        valueFrom: "/tmp"
+        valueFrom: "/home/ec2-user/RSNA_ASNR_MICCAI_BraTS2021_ValidationData_5Cases"
       - id: docker_script
         default:
           class: File
           location: "run_docker.py"
+      - id: runtime_quota
+        default: 240
+      - id: store
+        default: true
     out:
       - id: predictions
 
@@ -212,7 +171,7 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
       - id: previous_annotation_finished
-        source: "#annotate_docker_validation_with_output/finished"
+        source: "#annotate_submission_main_submitter/finished"
     out: [finished]
 
   validate:
@@ -220,31 +179,47 @@ steps:
     in:
       - id: input_file
         source: "#run_docker/predictions"
+      - id: goldstandard
+        source: "#download_goldstandard/filepath"
       - id: entity_type
-        source: "#get_docker_submission/entity_type"
+        valueFrom: "FileEntity"
     out:
       - id: results
       - id: status
       - id: invalid_reasons
   
   email_validation:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/validate_email.cwl
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/validate_email.cwl
     in:
       - id: submissionid
-        source: "#submissionId"
+        source: "#get_submissionid/submissionid"
       - id: synapse_config
         source: "#synapseConfig"
       - id: status
         source: "#validate/status"
       - id: invalid_reasons
         source: "#validate/invalid_reasons"
-      # OPTIONAL: set `default` to `false` if email notification about valid submission is needed
       - id: errors_only
         default: true
     out: [finished]
 
-  annotate_validation_with_output:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/annotate_submission.cwl
+  annotate_main_submission_with_validation:
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/annotate_submission.cwl
+    in:
+      - id: submissionid
+        source: "#get_submissionid/submissionid"
+      - id: annotation_values
+        source: "#validate/results"
+      - id: to_public
+        default: true
+      - id: force
+        default: true
+      - id: synapse_config
+        source: "#synapseConfig"
+    out: [finished]
+
+  annotate_submission_with_validation:
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/annotate_submission.cwl
     in:
       - id: submissionid
         source: "#submissionId"
@@ -256,17 +231,15 @@ steps:
         default: true
       - id: synapse_config
         source: "#synapseConfig"
-      - id: previous_annotation_finished
-        source: "#annotate_docker_upload_results/finished"
     out: [finished]
 
   check_status:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/check_status.cwl
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/check_status.cwl
     in:
       - id: status
         source: "#validate/status"
       - id: previous_annotation_finished
-        source: "#annotate_validation_with_output/finished"
+        source: "#annotate_main_submission_with_validation/finished"
       - id: previous_email_finished
         source: "#email_validation/finished"
     out: [finished]
@@ -274,31 +247,49 @@ steps:
   score:
     run: score.cwl
     in:
+      - id: parent_id
+        source: "#submitterUploadSynId"
+      - id: synapse_config
+        source: "#synapseConfig"
       - id: input_file
         source: "#run_docker/predictions"
       - id: goldstandard
         source: "#download_goldstandard/filepath"
-      - id: check_validation_finished 
+      - id: check_validation_finished
         source: "#check_status/finished"
     out:
       - id: results
-      
+      - id: status
+
   email_score:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/score_email.cwl
+    run: score_email.cwl
     in:
       - id: submissionid
-        source: "#submissionId"
+        source: "#get_submissionid/submissionid"
       - id: synapse_config
         source: "#synapseConfig"
       - id: results
         source: "#score/results"
-      # OPTIONAL: add annotations to be withheld from participants to `[]`
-      # - id: private_annotations
-      #   default: []
     out: []
 
-  annotate_submission_with_output:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/annotate_submission.cwl
+  annotate_main_submission_with_scores:
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/annotate_submission.cwl
+    in:
+      - id: submissionid
+        source: "#get_submissionid/submissionid"
+      - id: annotation_values
+        source: "#score/results"
+      - id: to_public
+        default: true
+      - id: force
+        default: true
+      - id: synapse_config
+        source: "#synapseConfig"
+    out: [finished]
+
+  # annotate internal submission with scores
+  annotate_submission_with_scores:
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/annotate_submission.cwl
     in:
       - id: submissionid
         source: "#submissionId"
@@ -310,7 +301,5 @@ steps:
         default: true
       - id: synapse_config
         source: "#synapseConfig"
-      - id: previous_annotation_finished
-        source: "#annotate_validation_with_output/finished"
     out: [finished]
  

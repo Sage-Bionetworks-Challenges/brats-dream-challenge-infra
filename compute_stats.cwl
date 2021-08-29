@@ -15,10 +15,8 @@ inputs:
     type: string
   - id: synapse_config
     type: File
-  - id: input_file
-    type: File
-  - id: goldstandard
-    type: File
+  - id: scores
+    type: Directory
   - id: check_validation_finished
     type: boolean?
 
@@ -27,17 +25,12 @@ arguments:
     prefix: --parent_id
   - valueFrom: $(inputs.synapse_config.path)
     prefix: -s
-  - valueFrom: $(inputs.input_file.path)
-    prefix: -p
-  - valueFrom: $(inputs.goldstandard.path)
-    prefix: -g
-  - valueFrom: "/work/CaPTk"
-    prefix: -c
   - valueFrom: results.json
     prefix: -o
 
 requirements:
   - class: InlineJavascriptRequirement
+  - class: InitialWorkDirRequirement
      
 outputs:
   - id: results

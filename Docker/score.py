@@ -77,10 +77,25 @@ def score(parent, pred_lst, captk_path, tmp_output="tmp.csv"):
     for pred in pred_lst:
         scan_id = pred[-12:-7]
         gold = os.path.join(parent, f"BraTS2021_{scan_id}_seg.nii.gz")
-        run_captk(captk_path, pred, gold, tmp_output)
-        scan_scores = extract_metrics(tmp_output, scan_id)
+        try:
+            run_captk(captk_path, pred, gold, tmp_output)
+            scan_scores = extract_metrics(tmp_output, scan_id)
+            os.remove(tmp_output)  # Remove file, as it's no longer needed
+        except subprocess.CalledProcessError:
+            # If no output found, give penalized scores.
+            scan_scores = (
+                pd.DataFrame({
+                    "scan_id": [f"BraTS2021_{scan_id}*"],
+                    "Dice_ET": [0], "Dice_TC": [0], "Dice_WT": [0],
+                    "Hausdorff95_ET": [374], "Hausdorff95_TC": [374],
+                    "Hausdorff95_WT": [374], "Sensitivity_ET": [0],
+                    "Sensitivity_TC": [0], "Sensitivity_WT": [0],
+                    "Specificity_ET": [0], "Specificity_TC": [0],
+                    "Specificity_WT": [0]
+                })
+                .set_index("scan_id")
+            )
         scores.append(scan_scores)
-        os.remove(tmp_output)  # Remove file, as it's no longer needed
     return pd.concat(scores).sort_values(by="scan_id")
 
 
@@ -91,39 +106,36 @@ def main():
     golds = utils.unzip_file(args.goldstandard_file)
 
     dir_name = os.path.split(golds[0])[0]
-    try:
-        results = score(dir_name, preds, args.captk_path)
-        cases = len(results.index)
-        results.loc["mean"] = results.mean()
-        results.loc["sd"] = results.std()
-        results.loc["median"] = results.median()
-        results.loc["25quantile"] = results.quantile(q=0.25)
-        results.loc["75quantile"] = results.quantile(q=0.75)
+    results = score(dir_name, preds, args.captk_path)
 
-        # CSV file of scores for all scans.
-        results.to_csv("all_scores.csv")
-        syn = synapseclient.Synapse(configPath=args.synapse_config)
-        syn.login(silent=True)
-        csv = synapseclient.File("all_scores.csv", parent=args.parent_id)
-        csv = syn.store(csv)
+    # Get number of segmentations predicted by participant, number of
+    # segmentation that could not be scored, and number of segmentations
+    # that were scored.
+    cases_predicted = len(results.index)
+    flagged_cases = results.scan_id.str.count(r"\*").sum()
+    cases_evaluated = cases_predicted - flagged_cases
 
-        # Results file for annotations.
-        with open(args.output, "w") as out:
-            out.write(json.dumps(
-                {**results.loc["mean"].to_dict(),
-                 "cases_evaluated": cases,
-                 "submission_scores": csv.id,
-                 "submission_status": "SCORED"}
-            ))
-    except subprocess.CalledProcessError:
-        with open(args.output, "w") as out:
-            out.write(json.dumps(
-                {"submission_status": "INVALID",
-                 "submission_errors": (
-                     "Error encountered during scoring. Please ask a Challenge "
-                     "Organizer for more information."
-                 )}
-            ))
+    results.loc["mean"] = results.mean()
+    results.loc["sd"] = results.std()
+    results.loc["median"] = results.median()
+    results.loc["25quantile"] = results.quantile(q=0.25)
+    results.loc["75quantile"] = results.quantile(q=0.75)
+
+    # CSV file of scores for all scans.
+    results.to_csv("all_scores.csv")
+    syn = synapseclient.Synapse(configPath=args.synapse_config)
+    syn.login(silent=True)
+    csv = synapseclient.File("all_scores.csv", parent=args.parent_id)
+    csv = syn.store(csv)
+
+    # Results file for annotations.
+    with open(args.output, "w") as out:
+        out.write(json.dumps(
+            {**results.loc["mean"].to_dict(),
+                "cases_evaluated": cases_evaluated,
+                "submission_scores": csv.id,
+                "submission_status": "SCORED"}
+        ))
 
 
 if __name__ == "__main__":
