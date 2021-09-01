@@ -177,7 +177,7 @@ steps:
       - id: submissionid
         source: "#submissionId"
       - id: annotation_values
-        source: "#run_docker/results"
+        source: "#run_docker/invalid_reasons"
       - id: to_public
         default: true
       - id: force
