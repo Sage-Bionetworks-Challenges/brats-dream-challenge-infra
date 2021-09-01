@@ -196,6 +196,13 @@ def main(syn, args):
                            args.parentid, store=args.store)
             container.remove()
 
+        # TODO: remove after stress test
+        if glob.glob("tumor_SCAN2020_class.nii.gz"):
+            os.rename("tumor_SCAN2020_class.nii.gz",
+                      f"Brats2021_{case_id}.nii.gz")
+            for extra in glob.glob("*unc*.nii.gz"):
+                os.remove(extra)
+
         statinfo = os.stat(log_filename)
         if statinfo.st_size == 0 and errors:
             create_log_file(log_filename, log_text=errors)
