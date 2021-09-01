@@ -195,6 +195,7 @@ steps:
         source: "#run_docker/status"
       - id: synapse_config
         source: "#synapseConfig"
+    out: [finished]
 
   check_docker_status:
     run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/check_status.cwl
@@ -310,6 +311,7 @@ steps:
         source: "#validate/status"
       - id: synapse_config
         source: "#synapseConfig"
+    out: [finished]
 
   check_status:
     run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/check_status.cwl
