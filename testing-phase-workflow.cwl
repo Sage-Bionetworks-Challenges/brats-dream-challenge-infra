@@ -138,6 +138,7 @@ steps:
         default: true
     out:
       - id: predictions
+      - id: results
       - id: status
       - id: invalid_reasons
 
@@ -162,7 +163,7 @@ steps:
       - id: submissionid
         source: "#get_submissionid/submissionid"
       - id: annotation_values
-        source: "#run_docker/invalid_reasons"
+        source: "#run_docker/results"
       - id: to_public
         default: true
       - id: force
@@ -177,7 +178,7 @@ steps:
       - id: submissionid
         source: "#submissionId"
       - id: annotation_values
-        source: "#run_docker/invalid_reasons"
+        source: "#run_docker/results"
       - id: to_public
         default: true
       - id: force

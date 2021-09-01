@@ -67,6 +67,11 @@ outputs:
     type: File?
     outputBinding:
       glob: predictions.tar.gz
+
+  - id: results
+    type: File
+    outputBinding:
+      glob: results.json  
   
   - id: status
     type: string
