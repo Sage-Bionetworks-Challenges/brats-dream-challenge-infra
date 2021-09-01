@@ -121,7 +121,7 @@ steps:
       - id: docker_authentication
         source: "#get_docker_config/docker_authentication"
       - id: parentid
-        source: "#submitterUploadSynId"
+        source: "#get_docker_submission/submitter_synid"
       - id: status
         valueFrom: "VALIDATED"
       - id: synapse_config
@@ -248,7 +248,7 @@ steps:
     run: score.cwl
     in:
       - id: parent_id
-        source: "#submitterUploadSynId"
+        source: "#get_docker_submission/submitter_synid"
       - id: synapse_config
         source: "#synapseConfig"
       - id: input_file
