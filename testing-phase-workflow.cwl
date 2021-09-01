@@ -162,7 +162,7 @@ steps:
       - id: submissionid
         source: "#get_submissionid/submissionid"
       - id: annotation_values
-        source: "#run_docker/results"
+        source: "#run_docker/invalid_reasons"
       - id: to_public
         default: true
       - id: force
@@ -186,13 +186,23 @@ steps:
         source: "#synapseConfig"
     out: [finished]
 
+  update_main_submission_status_with_docker:
+    run: update_status.cwl
+    in:
+      - id: submissionid
+        source: "#get_submissionid/submissionid"
+      - id: status
+        source: "#run_docker/status"
+      - id: synapse_config
+        source: "#synapseConfig"
+
   check_docker_status:
     run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/check_status.cwl
     in:
       - id: status
         source: "#run_docker/status"
       - id: previous_annotation_finished
-        source: "#annotate_main_submission_with_docker/finished"
+        source: "#update_main_submission_status_with_docker/finished"
       - id: previous_email_finished
         source: "#email_docker/finished"
     out: [finished]
@@ -291,13 +301,23 @@ steps:
         source: "#synapseConfig"
     out: [finished]
 
+  update_main_submission_status_with_validation:
+    run: update_status.cwl
+    in:
+      - id: submissionid
+        source: "#get_submissionid/submissionid"
+      - id: status
+        source: "#validate/status"
+      - id: synapse_config
+        source: "#synapseConfig"
+
   check_status:
     run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/check_status.cwl
     in:
       - id: status
         source: "#validate/status"
       - id: previous_annotation_finished
-        source: "#annotate_main_submission_with_validation/finished"
+        source: "#update_main_submission_status_with_validation/finished"
       - id: previous_email_finished
         source: "#email_validation/finished"
     out: [finished]
