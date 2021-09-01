@@ -6,6 +6,7 @@ import os
 import tarfile
 import time
 import glob
+import json
 
 import docker
 import synapseclient
@@ -201,7 +202,7 @@ def main(syn, args):
             store_log_file(syn, log_filename,
                            args.parentid, store=args.store)
     if warnings:
-        warnings_text = "\n\nWarnings:\n=========" + "\n".join(warnings)
+        warnings_text = "\n\nWarnings:\n=========\n" + "\n".join(warnings)
         create_log_file(log_filename, log_text=warnings_text, mode="a")
         store_log_file(syn, log_filename,
                        args.parentid, store=args.store)
@@ -216,11 +217,22 @@ def main(syn, args):
         for nifti in glob.glob("*.nii.gz"):
             os.rename(nifti, os.path.join("predictions", nifti))
         tar("predictions", "predictions.tar.gz")
+        status = "VALIDATED"
+        invalid_reasons = ""
     else:
-        raise Exception(
+        status = "INVALID"
+        invalid_reasons = (
             "No *.nii.gz files found; please check whether running the "
-            "Docker container locally will result in a NIfTI file."
+            "Docker container locally will result in a NIfTI file within "
+            "the time constaint."
         )
+    with open("results.json", "w") as out:
+        out.write(json.dumps(
+            {
+                "submission_status": status,
+                "submission_errors": invalid_reasons
+            }
+        ))
 
 
 if __name__ == '__main__':
