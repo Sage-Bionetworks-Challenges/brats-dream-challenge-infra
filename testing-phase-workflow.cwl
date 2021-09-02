@@ -383,4 +383,15 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
     out: [finished]
+
+  update_main_submission_status_with_score:
+    run: update_status.cwl
+    in:
+      - id: submissionid
+        source: "#get_submissionid/submissionid"
+      - id: submission_status
+        source: "#score/status"
+      - id: synapse_config
+        source: "#synapseConfig"
+    out: [finished]
  
