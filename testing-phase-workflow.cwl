@@ -192,7 +192,7 @@ steps:
     in:
       - id: submissionid
         source: "#get_submissionid/submissionid"
-      - id: status
+      - id: submission_status
         source: "#run_docker/status"
       - id: synapse_config
         source: "#synapseConfig"
@@ -308,7 +308,7 @@ steps:
     in:
       - id: submissionid
         source: "#get_submissionid/submissionid"
-      - id: status
+      - id: submission_status
         source: "#validate/status"
       - id: synapse_config
         source: "#synapseConfig"
