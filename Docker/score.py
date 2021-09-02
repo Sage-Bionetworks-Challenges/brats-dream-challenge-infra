@@ -112,7 +112,7 @@ def main():
     # segmentation that could not be scored, and number of segmentations
     # that were scored.
     cases_predicted = len(results.index)
-    flagged_cases = results.scan_id.str.count(r"\*").sum()
+    flagged_cases = int(results.reset_index().scan_id.str.count(r"\*").sum())
     cases_evaluated = cases_predicted - flagged_cases
 
     results.loc["mean"] = results.mean()
