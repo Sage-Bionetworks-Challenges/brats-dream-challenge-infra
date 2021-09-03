@@ -48,6 +48,15 @@ def remove_docker_container(container_name):
         print("Unable to remove container")
 
 
+def pull_docker_image(image_name):
+    """Pull docker image"""
+    client = docker.from_env()
+    try:
+        client.images.pull(image_name)
+    except docker.errors.APIError:
+        print("Unable to pull image")
+
+
 def remove_docker_image(image_name):
     """Remove docker image"""
     client = docker.from_env()
@@ -111,7 +120,7 @@ def main(syn, args):
 
     # Pull Docker image so that the process is not included in the
     # time limit.
-    client.images.pull(docker_image)
+    pull_docker_image(docker_image)
 
     # For the input directory, there will be a different case folder per
     # Docker run, e.g. /path/to/BraTS2021_00001, /path/to/BraTS2021_00013,
