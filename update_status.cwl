@@ -37,6 +37,7 @@ requirements:
           #!/usr/bin/env python
           import argparse
           import synapseclient
+          import time
           
           parser = argparse.ArgumentParser()
           parser.add_argument("-s", "--submissionid", required=True, help="Submission ID")
@@ -47,12 +48,21 @@ requirements:
           syn = synapseclient.Synapse(configPath=args.synapse_config)
           syn.login(silent=True)
 
-          sub = syn.getSubmissionStatus(args.submissionid)
           if args.sub_status in ["VALIDATED", "SCORED"]:
-            sub.status = "ACCEPTED"
+            new_status = "ACCEPTED"
           else:
-            sub.status = "INVALID"
-          syn.store(sub)
+            new_status = "INVALID"
+          
+          sub = syn.getSubmissionStatus(args.submissionid)
+          sub.status = new_status
+          try:
+            syn.store(sub)
+          except synapseclient.core.exceptions.SynapseHTTPError:
+            time.sleep(3)
+            sub = syn.getSubmissionStatus(args.submissionid)
+            sub.status = new_status
+            syn.store(sub)
+            
 
 outputs:
 - id: finished
