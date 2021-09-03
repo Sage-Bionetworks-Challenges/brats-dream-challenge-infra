@@ -199,8 +199,13 @@ def main(syn, args):
             # Note the reason for container exit in the logs if time
             # limit is reached.
             if time_elapsed > args.runtime_quota:
+                # TODO: uncomment for testing data
+                # warnings.append(f"Time limit of {args.runtime_quota}s reached "
+                #                 f"for case {case_id} - no output generated.")
                 warnings.append(f"Time limit of {args.runtime_quota}s reached "
-                                f"for case {case_id} - no output generated.")
+                                f"for case {case_id} - stopping submission...")
+                container.remove()
+                break
 
             # Must run again to make sure all the logs are captured
             log_text = container.logs()
