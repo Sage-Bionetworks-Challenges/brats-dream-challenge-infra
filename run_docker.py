@@ -109,6 +109,10 @@ def main(syn, args):
     output_dir = os.getcwd()
     input_dir = args.input_dir
 
+    # Pull Docker image so that the process is not included in the
+    # time limit.
+    client.images.pull(docker_image)
+
     # For the input directory, there will be a different case folder per
     # Docker run, e.g. /path/to/BraTS2021_00001, /path/to/BraTS2021_00013,
     # etc. In total, there will be 5 Docker runs for the validation data,
