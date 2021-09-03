@@ -95,7 +95,7 @@ steps:
     run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/annotate_submission.cwl
     in:
       - id: submissionid
-        source: "#submissionId"
+        source: "#get_submissionid/submissionid"
       - id: annotation_values
         source: "#get_docker_submission/results"
       - id: to_public
@@ -170,6 +170,8 @@ steps:
         default: true
       - id: synapse_config
         source: "#synapseConfig"
+      - id: previous_annotation_finished
+        source: "#annotate_submission_main_submitter/finished"
     out: [finished]
 
   annotate_submission_with_docker:
@@ -241,7 +243,7 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
       - id: previous_annotation_finished
-        source: "#annotate_submission_main_submitter/finished"
+        source: "#annotate_submission_with_docker/finished"
     out: [finished]
 
   validate:
@@ -286,6 +288,8 @@ steps:
         default: true
       - id: synapse_config
         source: "#synapseConfig"
+      - id: previous_annotation_finished
+        source: "#annotate_main_submission_with_docker/finished"
     out: [finished]
 
   annotate_submission_with_validation:
@@ -301,6 +305,8 @@ steps:
         default: true
       - id: synapse_config
         source: "#synapseConfig"
+      - id: previous_annotation_finished
+        source: "#annotate_submission_with_docker/finished"
     out: [finished]
 
   update_main_submission_status_with_validation:
@@ -366,6 +372,8 @@ steps:
         default: true
       - id: synapse_config
         source: "#synapseConfig"
+      - id: previous_annotation_finished
+        source: "#annotate_main_submission_with_validation/finished"
     out: [finished]
 
   # annotate internal submission with scores
@@ -382,6 +390,8 @@ steps:
         default: true
       - id: synapse_config
         source: "#synapseConfig"
+      - id: previous_annotation_finished
+        source: "#annotate_submission_with_validation/finished"
     out: [finished]
 
   update_main_submission_status_with_score:
