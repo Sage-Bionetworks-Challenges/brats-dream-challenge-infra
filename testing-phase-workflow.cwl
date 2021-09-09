@@ -95,7 +95,7 @@ steps:
     run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.2/cwl/annotate_submission.cwl
     in:
       - id: submissionid
-        source: "#get_submissionid/submissionid"
+        source: "#submissionid"
       - id: annotation_values
         source: "#get_docker_submission/results"
       - id: to_public
