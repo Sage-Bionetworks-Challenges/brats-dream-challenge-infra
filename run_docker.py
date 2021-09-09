@@ -141,15 +141,8 @@ def main(syn, args):
         print("mounting volumes")
         # Specify the input directory with 'ro' permissions, output with
         # 'rw' permissions.
-        # mounted_volumes = {output_dir: '/output:rw',
-        #                    case_folder: '/input:ro'}
-
-        # FOR NOW: stress-test with these mounted directories, which are
-        #          expected in last year's models.
-        mounted_volumes = {
-            output_dir: '/app/data/results/:rw',
-            case_folder: '/app/data:rw'
-        }
+        mounted_volumes = {output_dir: '/output:rw',
+                           case_folder: '/input:ro'}
 
         # Format the mounted volumes so that Docker SDK can understand.
         all_volumes = [output_dir, case_folder]
@@ -166,7 +159,6 @@ def main(syn, args):
         time_elapsed = 0
         try:
             container = client.containers.run(docker_image,
-                                              "python3 DeepSCAN_BRATS_2020.py -l",  # TODO: remove after stress test
                                               detach=True,
                                               volumes=volumes,
                                               name=container_name,
@@ -213,13 +205,6 @@ def main(syn, args):
             store_log_file(syn, log_filename,
                            args.parentid, store=args.store)
             container.remove()
-
-        # TODO: remove after stress test
-        if glob.glob("tumor_SCAN2020_class.nii.gz"):
-            os.rename("tumor_SCAN2020_class.nii.gz",
-                      f"Brats2021_{case_id}.nii.gz")
-            for extra in glob.glob("*unc*.nii.gz"):
-                os.remove(extra)
 
         statinfo = os.stat(log_filename)
         if statinfo.st_size == 0 and errors:
