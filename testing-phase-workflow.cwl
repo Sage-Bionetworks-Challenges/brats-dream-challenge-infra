@@ -61,7 +61,8 @@ steps:
     run: https://raw.githubusercontent.com/Sage-Bionetworks-Workflows/dockstore-tool-synapse/v0.2/cwl/synapse-get-tool.cwl
     in:
       - id: synapseid
-        valueFrom: "syn26017031"
+        valueFrom: "syn26126823"
+        # valueFrom: "syn26017031"
       - id: synapse_config
         source: "#synapseConfig"
     out:
@@ -132,8 +133,8 @@ steps:
         default:
           class: File
           location: "run_docker.py"
-      - id: runtime_quota
-        default: 390
+      # - id: runtime_quota
+      #   default: 390
       - id: store
         default: true
     out:
