@@ -61,13 +61,14 @@ def extract_metrics(tmp, scan_id):
     res = (
         pd.read_csv(tmp, index_col="Labels")
         .filter(items=["Labels", "Dice", "Hausdorff95",
-                       "Sensitivity", "Specificity"])
+                       "Sensitivity", "Specificity",
+                       "Precision"])
         .filter(items=["ET", "WT", "TC"], axis=0)
         .reset_index()
         .assign(scan_id=f"BraTS2021_{scan_id}")
         .pivot(index="scan_id", columns="Labels")
     )
-    res.columns = ["_".join(col).strip() for col in res.columns.values]
+    res.columns = ["_".join(col).strip() for col in res.columns]
     return res
 
 
@@ -91,7 +92,8 @@ def score(parent, pred_lst, captk_path, tmp_output="tmp.csv"):
                     "Hausdorff95_WT": [374], "Sensitivity_ET": [0],
                     "Sensitivity_TC": [0], "Sensitivity_WT": [0],
                     "Specificity_ET": [0], "Specificity_TC": [0],
-                    "Specificity_WT": [0]
+                    "Specificity_WT": [0], "Precision_ET": [0],
+                    "Precision_TC": [0], "Precision_WT": [0]
                 })
                 .set_index("scan_id")
             )
