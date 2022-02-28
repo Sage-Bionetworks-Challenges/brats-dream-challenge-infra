@@ -8,7 +8,7 @@ baseCommand: score.py
 
 hints:
   DockerRequirement:
-    dockerPull: docker.synapse.org/syn25829070/scoring:v4
+    dockerPull: docker.synapse.org/syn25829070/scoring:v5
 
 inputs:
   - id: parent_id
