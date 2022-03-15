@@ -22,7 +22,7 @@ def get_args():
     parser.add_argument("-e", "--entity_type",
                         type=str, required=True)
     parser.add_argument("-t", "--tmp_dir",
-                        type=str, default="tmpdir")             
+                        type=str, default="tmpdir")
     parser.add_argument("-o", "--output",
                         type=str, default="results.json")
     return parser.parse_args()
@@ -97,12 +97,17 @@ def main():
                 "containing at least one NIfTI file."
             )
     status = "INVALID" if invalid_reasons else "VALIDATED"
+    invalid_reasons = "\n".join(invalid_reasons)
+
+    # truncate validation errors if >500 (character limit for sending email)
+    if len(invalid_reasons) > 500:
+        invalid_reasons = invalid_reasons[:496] + "..."
 
     with open(args.output, "w") as out:
         out.write(json.dumps(
             {
                 "submission_status": status,
-                "submission_errors": "\n".join(invalid_reasons)[:500]
+                "submission_errors": invalid_reasons
             }
         ))
 
