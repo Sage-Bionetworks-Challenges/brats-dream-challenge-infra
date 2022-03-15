@@ -102,7 +102,7 @@ def main():
         out.write(json.dumps(
             {
                 "submission_status": status,
-                "submission_errors": "\n".join(invalid_reasons)
+                "submission_errors": "\n".join(invalid_reasons)[:500]
             }
         ))
 
