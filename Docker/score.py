@@ -4,8 +4,9 @@
 Run `BraTS Similarity Metrics Computation` command from CaPTk and return:
   - Dice
   - Hausdorff95
-  - Overlap
   - Sensitivity
+  - Specificity
+  - Precision
 """
 import os
 import subprocess
@@ -57,6 +58,7 @@ def extract_metrics(tmp, scan_id):
       - Hausdorff distance
       - specificity
       - sensitivity
+      - precision
     """
     res = (
         pd.read_csv(tmp, index_col="Labels")
