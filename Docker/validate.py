@@ -16,9 +16,9 @@ def get_args():
     """Set up command-line interface and get arguments."""
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--predictions_file",
-                        type=str, required=True)
+                        type=str, default="/predictions.zip")
     parser.add_argument("-g", "--goldstandard_file",
-                        type=str, required=True)
+                        type=str, default="/goldstandard.zip")
     parser.add_argument("-e", "--entity_type",
                         type=str, required=True)
     parser.add_argument("-t", "--tmp_dir",

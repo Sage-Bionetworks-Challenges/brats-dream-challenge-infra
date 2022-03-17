@@ -24,15 +24,15 @@ def get_args():
     parser.add_argument("--parent_id",
                         type=str, required=True)
     parser.add_argument("-s", "--synapse_config",
-                        type=str, required=True)
+                        type=str, default="/.synapseConfig")
     parser.add_argument("-p", "--predictions_file",
-                        type=str, required=True)
+                        type=str, default="/predictions.zip")
     parser.add_argument("-g", "--goldstandard_file",
-                        type=str, required=True)
+                        type=str, default="/goldstandard.zip")
     parser.add_argument("-o", "--output",
                         type=str, default="results.json")
     parser.add_argument("-c", "--captk_path",
-                        type=str, required=True)
+                        type=str, default="/work/CaPTk")
     return parser.parse_args()
 
 
