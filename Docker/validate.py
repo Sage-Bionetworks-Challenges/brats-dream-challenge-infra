@@ -23,8 +23,7 @@ def get_args():
                         type=str, required=True)
     parser.add_argument("-t", "--tmp_dir",
                         type=str, default="tmpdir")
-    parser.add_argument("-o", "--output",
-                        type=str, default="results.json")
+    parser.add_argument("-o", "--output", type=str)
     return parser.parse_args()
 
 
@@ -102,14 +101,16 @@ def main():
     # truncate validation errors if >500 (character limit for sending email)
     if len(invalid_reasons) > 500:
         invalid_reasons = invalid_reasons[:496] + "..."
+    res = json.dumps({
+        "submission_status": status,
+        "submission_errors": invalid_reasons
+    })
 
-    with open(args.output, "w") as out:
-        out.write(json.dumps(
-            {
-                "submission_status": status,
-                "submission_errors": invalid_reasons
-            }
-        ))
+    if args.output:
+        with open(args.output, "w") as out:
+            out.write(res)
+    else:
+        print(res)
 
 
 if __name__ == "__main__":

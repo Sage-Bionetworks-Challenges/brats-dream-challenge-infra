@@ -71,7 +71,7 @@ For example:
       -p ~/predictions.zip \
       -e FileEntity
 
-Results are returned in a JSON file, `results.json`, where:
+Results are printed to STDOUT, where:
 
 - submission_status - indicates whether the submission is valid (`VALIDATED`
   or `INVALID`)
@@ -82,7 +82,7 @@ Results are returned in a JSON file, `results.json`, where:
 To score a submission, run the following command:
 
     python score.py \
-      --parent_id <Synapse ID to a folder storing logs> \
+      --parent_id <Synapse ID to logs folder> \
       -s <filepath to Synapse configuration file> \
       -c <filepath to CaPTk application> \
       -g <filepath to tarball/zipped archive of ground truth> \
@@ -124,7 +124,7 @@ To validate a submission, run the following command:
         validate.py -e FileEntity
 
 where `/path/to/goldstandard` and `/path/to/predictions` are the absolute
-paths to the ground truth and prediction tarballs/zipped archives, respectively.
+paths to the ground truth and prediction tarballs/zipped archives.
 
 #### Scoring
 
@@ -135,11 +135,12 @@ To score a submission, run the following command:
       -v /path/to/goldstandard:/goldstandard.zip:ro \
       -v /path/to/predictions:/predictions.zip:ro \
       docker.synapse.org/syn25829067/evaluation:v1 \
-        score.py --parent_id syn21246349
+        score.py --parent_id <Synapse ID to logs folder>
 
 where `/path/to/.synapseConfig`, `/path/to/goldstandard`, and
 `/path/to/predictions` are the absolute paths to the Synapse configuration
-file, ground truth and prediction tarballs/zipped archive.
+file, ground truth and prediction tarballs/zipped archives.
+
 
 <!-- Links -->
 
