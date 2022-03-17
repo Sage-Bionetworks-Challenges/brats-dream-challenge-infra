@@ -1,4 +1,8 @@
-# BraTS Challenge (2021, 2022)
+# BraTS Challenge (2021, 2022) - Task 1
+
+| 2021                                      | 2022                                      |
+| ----------------------------------------- | ----------------------------------------- |
+| [link](https://www.synapse.org/brats2021) | [link](https://www.synapse.org/brats2022) |
 
 This series of challenges is split into two phases:
 
@@ -35,8 +39,8 @@ if desired.
 - [CaPTk 1.8.1+]
 
 Alternatively, if you do not wish to install Python and/or CaPTk, you may
-perform validation and scoring using our [evaluation container] ([Docker]
-required).
+perform validation and scoring using the challenge's [evaluation model]
+([Docker] and Synapse account required).
 
 ### Running with Python
 
@@ -55,9 +59,10 @@ To validate a submission, run the following command:
       -p <filepath to tarball/zipped archive of predictions> \
       -e <Synapse entity type of submission>
 
-Note that `-e` flag is how the Synapse platform ensures that the submission
-is a file and not a Docker container, folder, etc. In order to not incorrectly
-label the submission as "INVALID" on your machine, manually enter `FileEntity`.
+Note that the `-e` flag is relevant to the Synapse platform only; it indicates
+the submission type, e.g. a file, Docker container, folder, etc. In order to
+not incorrectly label the submission as "INVALID" on your machine, manually
+pass `FileEntity` for `-e`.
 
 For example:
 
@@ -68,7 +73,8 @@ For example:
 
 Results are returned in a JSON file, `results.json`, where:
 
-- submission_status - indicates whether the submission is valid or not
+- submission_status - indicates whether the submission is valid (`VALIDATED`
+  or `INVALID`)
 - submission_errors - list of validation errors, if any
 
 #### Scoring
@@ -76,21 +82,64 @@ Results are returned in a JSON file, `results.json`, where:
 To score a submission, run the following command:
 
     python score.py \
-      --parent_id <Synapse ID to log folder> \
-      -s <filepath to Synapse configuration file, .synapseConfig> \
+      --parent_id <Synapse ID to a folder storing logs> \
+      -s <filepath to Synapse configuration file> \
       -c <filepath to CaPTk application> \
       -g <filepath to tarball/zipped archive of ground truth> \
       -p <filepath to tarball/zipped archive of predictions>
 
-Two output files are produced, `results.json` and `scores.csv`, where:
+For example:
 
-- `results.json` is a JSON file containing metric averages across all
-  scored predictions
-- `scores.csv` is a CSV file containing individual metric scores
+    python score.py \
+      --parent_id syn26003183 \
+      -s ~/.synapseConfig \
+      -c /Applications/CaPTk_1.8.1.app/Contents \
+      -g ~/goldstandard.zip \
+      -p ~/predictions.zip
+
+Results are returned in two files, where:
+
+- `results.json` is a JSON file containing metric averages across all scored
+  segmentations, along with additional information such as submission status,
+  number of cases evaluated, etc.
+- `scores.csv` is a CSV file containing individual metric scores of each
+  segmentation
 
 ## Running with Docker
 
-_TODO_
+To use the [evaluation model], first log in to the Synapse Docker hub and get
+the image:
+
+    docker login docker.synapse.org
+    docker pull docker.synapse.org/syn25829067/evaluation
+
+#### Validation
+
+To validate a submission, run the following command:
+
+    docker run \
+      -v /path/to/goldstandard:/goldstandard.zip:ro \
+      -v /path/to/predictions:/predictions.zip:ro \
+      docker.synapse.org/syn25829067/evaluation:v1 \
+        validate.py -e FileEntity
+
+where `/path/to/goldstandard` and `/path/to/predictions` are the absolute
+paths to the ground truth and prediction tarballs/zipped archives, respectively.
+
+#### Scoring
+
+To score a submission, run the following command:
+
+    docker run \
+      -v /path/to/.synapseConfig:/.synapseConfig \
+      -v /path/to/goldstandard:/goldstandard.zip:ro \
+      -v /path/to/predictions:/predictions.zip:ro \
+      docker.synapse.org/syn25829067/evaluation:v1 \
+        score.py --parent_id syn21246349
+
+where `/path/to/.synapseConfig`, `/path/to/goldstandard`, and
+`/path/to/predictions` are the absolute paths to the Synapse configuration
+file, ground truth and prediction tarballs/zipped archive.
 
 <!-- Links -->
 
@@ -99,5 +148,5 @@ _TODO_
 [captk]: https://cbica.github.io/CaPTk/
 [synapse platform]: https://www.synapse.org/
 [captk 1.8.1+]: https://cbica.github.io/CaPTk/Download.html
-[evaluation container]: https://www.synapse.org/#!Synapse:syn27788111
+[evaluation model]: https://www.synapse.org/#!Synapse:syn27788111
 [docker]: https://docs.docker.com/get-docker/
