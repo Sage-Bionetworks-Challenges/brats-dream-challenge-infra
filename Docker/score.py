@@ -134,12 +134,12 @@ def main():
 
     # Results file for annotations.
     with open(args.output, "w") as out:
-        out.write(json.dumps(
-            {**results.loc["mean"].to_dict(),
-                "cases_evaluated": cases_evaluated,
-                "submission_scores": csv.id,
-                "submission_status": "SCORED"}
-        ))
+        res_dict = {**results.loc["mean"].to_dict(),
+                    "cases_evaluated": cases_evaluated,
+                    "submission_scores": csv.id,
+                    "submission_status": "SCORED"}
+        res_dict = {k: v for k, v in res_dict.items() if not pd.isna(v)}
+        out.write(json.dumps(res_dict))
 
 
 if __name__ == "__main__":
