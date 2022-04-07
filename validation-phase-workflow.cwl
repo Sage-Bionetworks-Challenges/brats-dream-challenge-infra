@@ -44,6 +44,15 @@ steps:
         source: "#synapseConfig"
     out: []
 
+  check_submitter:
+    run: check_submitter_id.cwl
+    in:
+      - id: submissionid
+        source: "#submissionId"
+      - id: blacklist_ids
+        default: [3445975, 3444192, 3444144, 3438810]
+    out: [finished]
+
   download_submission:
     run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/get_submission.cwl
     in:
