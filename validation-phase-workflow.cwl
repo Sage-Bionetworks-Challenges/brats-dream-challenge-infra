@@ -49,6 +49,8 @@ steps:
     in:
       - id: submissionid
         source: "#submissionId"
+      - id: synapse_config
+        source: "#synapseConfig"
       - id: blacklist_ids
         default: [3445975, 3444192, 3444144, 3438810]
     out: [finished]
