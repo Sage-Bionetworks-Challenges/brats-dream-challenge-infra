@@ -42,7 +42,7 @@ requirements:
           parser = argparse.ArgumentParser()
           parser.add_argument("-s", "--submissionid", required=True, help="Submission ID")
           parser.add_argument("-c", "--synapse_config", required=True, help="credentials file")
-          parser.add_argument("-b", "--blacklist", help="list of blacklisted IDs")
+          parser.add_argument("-b", "--blacklist", nargs="+", default=[], help="list of blacklisted IDs")
 
           args = parser.parse_args()
           syn = synapseclient.Synapse(configPath=args.synapse_config)
