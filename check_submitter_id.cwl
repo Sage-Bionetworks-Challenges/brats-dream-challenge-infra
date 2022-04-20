@@ -40,6 +40,7 @@ requirements:
           #!/usr/bin/env python
           import synapseclient
           import argparse
+          import json
 
           parser = argparse.ArgumentParser()
           parser.add_argument("-s", "--submissionid", required=True, help="Submission ID")
@@ -56,10 +57,22 @@ requirements:
             sub_status = syn.getSubmissionStatus(args.submissionid)
             sub_status.status = "CLOSED"
             syn.store(sub_status)
-            raise Exception("invalid submission")
+          
+          with open("results.json", "w") as o:
+            o.write(json.dumps({
+              "status": syn.getSubmissionStatus(args.submissionid).status
+            }))
+            
           
 outputs:
-- id: finished
-  type: boolean
-  outputBinding:
-    outputEval: $( true )
+  - id: results
+    type: File
+    outputBinding:
+      glob: results.json   
+
+  - id: status
+    type: string
+    outputBinding:
+      glob: results.json
+      loadContents: true
+      outputEval: $(JSON.parse(self[0].contents)['status'])
