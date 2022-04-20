@@ -50,7 +50,7 @@ requirements:
 
           sub = syn.getSubmission(args.submissionid, downloadFile=False)
           submitterid = sub.get('teamId', sub.get('userId'))
-          if int(submitterid) in args.blacklist:
+          if submitterid in args.blacklist:
             sub_status = syn.getSubmissionStatus(args.submissionid)
             sub_status.status = "CLOSED"
             syn.store(sub_status)
