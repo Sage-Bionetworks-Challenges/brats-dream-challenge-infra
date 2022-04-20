@@ -52,7 +52,7 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
       - id: blacklist_ids
-        default: [3438810, 3444144, 3444192, 3445975, 3445977, 3444607, 3444608, 3444607]
+        default: [3438810, 3444144, 3444192, 3445975, 3445977, 3444607, 3444608, 3401292]
     out: [finished]
 
   download_submission:
