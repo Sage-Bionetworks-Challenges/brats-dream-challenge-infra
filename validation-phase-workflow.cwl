@@ -70,7 +70,6 @@ steps:
         default: [3438810, 3444144, 3444192, 3445975, 3445977, 3444607, 3444608, 3401292]
       - id: entity_type
         source: "#download_submission/entity_type"
-
     out: [finished]
       
   download_goldstandard:
@@ -80,6 +79,8 @@ steps:
         valueFrom: "syn26017031"
       - id: synapse_config
         source: "#synapseConfig"
+      - id: check_submitter_finished
+        source: "#check_submitter/finished"
     out:
       - id: filepath
 
