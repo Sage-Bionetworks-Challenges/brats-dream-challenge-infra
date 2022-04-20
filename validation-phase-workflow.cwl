@@ -44,17 +44,6 @@ steps:
         source: "#synapseConfig"
     out: []
 
-  check_submitter:
-    run: check_submitter_id.cwl
-    in:
-      - id: submissionid
-        source: "#submissionId"
-      - id: synapse_config
-        source: "#synapseConfig"
-      - id: blacklist_ids
-        default: [3438810, 3444144, 3444192, 3445975, 3445977, 3444607, 3444608, 3401292]
-    out: [finished]
-
   download_submission:
     run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/get_submission.cwl
     in:
@@ -69,6 +58,20 @@ steps:
       - id: entity_id
       - id: entity_type
       - id: results
+
+  check_submitter:
+    run: check_submitter_id.cwl
+    in:
+      - id: submissionid
+        source: "#submissionId"
+      - id: synapse_config
+        source: "#synapseConfig"
+      - id: blacklist_ids
+        default: [3438810, 3444144, 3444192, 3445975, 3445977, 3444607, 3444608, 3401292]
+      - id: entity_type
+        source: "#download_submission/entity_type"
+
+    out: [finished]
       
   download_goldstandard:
     run: https://raw.githubusercontent.com/Sage-Bionetworks-Workflows/cwl-tool-synapseclient/v1.4/cwl/synapse-get-tool.cwl

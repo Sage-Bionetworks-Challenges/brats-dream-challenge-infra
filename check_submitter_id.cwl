@@ -18,6 +18,8 @@ inputs:
     type: File
   - id: blacklist_ids
     type: int[]
+  - id: entity_type
+    type: string
 
 arguments:
   - valueFrom: check_submitter_id.py
