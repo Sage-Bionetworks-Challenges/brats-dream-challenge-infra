@@ -59,37 +59,6 @@ steps:
       - id: entity_type
       - id: results
 
-  check_submitter:
-    run: check_submitter_id.cwl
-    in:
-      - id: submissionid
-        source: "#submissionId"
-      - id: synapse_config
-        source: "#synapseConfig"
-      - id: blacklist_ids
-        default: [3438810, 3444144, 3444192, 3445975, 3445977, 3444607, 3444608, 3401292]
-      - id: entity_type
-        source: "#download_submission/entity_type"
-    out:
-      - id: status
-
-  check_submitter_status:
-    run: check_status.cwl
-    in:
-      - id: status
-        source: "#check_submitter/status"
-    out: [finished]
-      
-  download_goldstandard:
-    run: https://raw.githubusercontent.com/Sage-Bionetworks-Workflows/cwl-tool-synapseclient/v1.4/cwl/synapse-get-tool.cwl
-    in:
-      - id: synapseid
-        valueFrom: "syn26017031"
-      - id: synapse_config
-        source: "#synapseConfig"
-    out:
-      - id: filepath
-
   validate:
     run: validate.cwl
     in:
@@ -99,8 +68,6 @@ steps:
         source: "#download_goldstandard/filepath"
       - id: entity_type
         source: "#download_submission/entity_type"
-      - id: check_status
-        source: "#check_submitter_status/finished"
     out:
       - id: results
       - id: status
