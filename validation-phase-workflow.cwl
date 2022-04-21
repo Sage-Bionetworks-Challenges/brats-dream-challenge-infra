@@ -59,6 +59,16 @@ steps:
       - id: entity_type
       - id: results
 
+  download_goldstandard:
+    run: https://raw.githubusercontent.com/Sage-Bionetworks-Workflows/cwl-tool-synapseclient/v1.4/cwl/synapse-get-tool.cwl
+    in:
+      - id: synapseid
+        valueFrom: "syn26017031"
+      - id: synapse_config
+        source: "#synapseConfig"
+    out:
+      - id: filepath
+
   validate:
     run: validate.cwl
     in:
