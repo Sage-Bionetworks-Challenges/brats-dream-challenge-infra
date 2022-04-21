@@ -17,8 +17,6 @@ inputs:
     type: File
   - id: entity_type
     type: string
-  - id: check_status
-    type: boolean?
 
 arguments:
   - valueFrom: $(inputs.input_file)
