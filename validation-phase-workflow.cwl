@@ -37,7 +37,7 @@ steps:
       - id: entityid
         source: "#submitterUploadSynId"
       - id: principalid
-        valueFrom: "3427583"
+        valueFrom: "3445677"
       - id: permissions
         valueFrom: "download"
       - id: synapse_config
@@ -63,14 +63,14 @@ steps:
     run: https://raw.githubusercontent.com/Sage-Bionetworks-Workflows/cwl-tool-synapseclient/v1.4/cwl/synapse-get-tool.cwl
     in:
       - id: synapseid
-        valueFrom: "syn26017031"
+        valueFrom: "syn30282882"
       - id: synapse_config
         source: "#synapseConfig"
     out:
       - id: filepath
 
   validate:
-    run: validate.cwl
+    run: steps/validate.cwl
     in:
       - id: input_file
         source: "#download_submission/filepath"
@@ -126,7 +126,7 @@ steps:
     out: [finished]
 
   score:
-    run: score.cwl
+    run: steps/score.cwl
     in:
       - id: parent_id
         source: "#submitterUploadSynId"
@@ -143,7 +143,7 @@ steps:
       - id: status
       
   email_score:
-    run: score_email.cwl
+    run: steps/score_email.cwl
     in:
       - id: submissionid
         source: "#submissionId"
