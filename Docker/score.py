@@ -67,7 +67,7 @@ def extract_metrics(tmp, scan_id):
                        "Precision"])
         .filter(items=["ET", "WT", "TC"], axis=0)
         .reset_index()
-        .assign(scan_id=f"BraTS2021_{scan_id}")
+        .assign(scan_id=f"FeTS2022_{scan_id}")
         .pivot(index="scan_id", columns="Labels")
     )
     res.columns = ["_".join(col).strip() for col in res.columns]
@@ -79,7 +79,7 @@ def score(parent, pred_lst, captk_path, tmp_output="tmp.csv"):
     scores = []
     for pred in pred_lst:
         scan_id = pred[-12:-7]
-        gold = os.path.join(parent, f"BraTS2021_{scan_id}_seg.nii.gz")
+        gold = os.path.join(parent, f"FeTS2022_{scan_id}_seg.nii.gz")
         try:
             run_captk(captk_path, pred, gold, tmp_output)
             scan_scores = extract_metrics(tmp_output, scan_id)
@@ -88,7 +88,7 @@ def score(parent, pred_lst, captk_path, tmp_output="tmp.csv"):
             # If no output found, give penalized scores.
             scan_scores = (
                 pd.DataFrame({
-                    "scan_id": [f"BraTS2021_{scan_id}*"],
+                    "scan_id": [f"FeTS2022_{scan_id}*"],
                     "Dice_ET": [0], "Dice_TC": [0], "Dice_WT": [0],
                     "Hausdorff95_ET": [374], "Hausdorff95_TC": [374],
                     "Hausdorff95_WT": [374], "Sensitivity_ET": [0],
