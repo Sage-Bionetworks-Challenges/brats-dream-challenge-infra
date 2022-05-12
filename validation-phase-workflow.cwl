@@ -1,36 +1,36 @@
 #!/usr/bin/env cwl-runner
-#
-# Prediction file challenge workflow
-# Inputs:
-#   submissionId: Submission ID to run this workflow on
-#   adminUploadSynId: Synapse ID of Folder accessible by admin user/team
-#   submitterUploadSynId: Synapse ID of Folder accessible by submitter
-#   workflowSynapseId: Synapse ID of File that links to workflow archive
-#   synapseConfig: filepath to .synapseConfig file
 
 cwlVersion: v1.0
 class: Workflow
+label: FeTS Challenge Evaluation - Segmentation Files
+doc: >
+  This workflow will validate and score a tarball or zipped archive of NIfTI
+  files.  Aggregate scores are returned in an email, along with a link to the
+  submission's scores file, which will contain each scan's individual score.
 
 requirements:
   - class: StepInputExpressionRequirement
 
 inputs:
-  - id: submissionId
+  adminUploadSynId:
+    label: Synapse Folder ID accessible by an admin
+    type: string
+  submissionId:
+    label: Submission ID
     type: int
-  - id: adminUploadSynId
+  submitterUploadSynId:
+    label: Synapse Folder ID accessible by the submitter
     type: string
-  - id: submitterUploadSynId
-    type: string
-  - id: workflowSynapseId
-    type: string
-  - id: synapseConfig
+  synapseConfig:
+    label: filepath to .synapseConfig file
     type: File
+  workflowSynapseId:
+    label: Synapse File ID that links to the workflow
+    type: string
 
-# No output; everything is uploaded to Synapse.
-outputs: []
+outputs: {}
 
 steps:
-
   set_submitter_folder_permissions:
     run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/set_permissions.cwl
     in:
@@ -94,7 +94,6 @@ steps:
         source: "#validate/status"
       - id: invalid_reasons
         source: "#validate/invalid_reasons"
-      # OPTIONAL: set `default` to `false` if email notification about valid submission is needed
       - id: errors_only
         default: true
     out: [finished]
@@ -183,4 +182,12 @@ steps:
       - id: previous_email_finished
         source: "#email_score/finished"
     out: [finished]
- 
+
+s:author:
+  - class: s:Person
+    s:name: Verena Chung
+    s:email: verena.chung@sagebase.org
+    s:identifier: https://orcid.org/0000-0002-5622-7998
+
+$namespaces:
+  s: https://schema.org/
