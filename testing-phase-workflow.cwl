@@ -46,7 +46,7 @@ steps:
     out: []
 
   get_submissionid:
-    run: get_linked_submissionid.cwl
+    run: steps/get_linked_submissionid.cwl
     in:
       - id: submissionid
         source: "#submissionId"
@@ -77,7 +77,7 @@ steps:
       - id: docker_authentication
 
   get_docker_submission:
-    run: get_submission_docker.cwl
+    run: steps/get_submission_docker.cwl
     in:
       - id: submissionid
         source: "#get_submissionid/submissionid"
@@ -190,7 +190,7 @@ steps:
     out: [finished]
 
   update_main_submission_status_with_docker:
-    run: update_status.cwl
+    run: steps/update_status.cwl
     in:
       - id: submissionid
         source: "#get_submissionid/submissionid"
@@ -247,7 +247,7 @@ steps:
     out: [finished]
 
   validate:
-    run: validate.cwl
+    run: steps/validate.cwl
     in:
       - id: input_file
         source: "#run_docker/predictions"
@@ -310,7 +310,7 @@ steps:
     out: [finished]
 
   update_main_submission_status_with_validation:
-    run: update_status.cwl
+    run: steps/update_status.cwl
     in:
       - id: submissionid
         source: "#get_submissionid/submissionid"
@@ -332,7 +332,7 @@ steps:
     out: [finished]
 
   score:
-    run: score.cwl
+    run: steps/score.cwl
     in:
       - id: parent_id
         source: "#get_docker_submission/submitter_synid"
@@ -349,7 +349,7 @@ steps:
       - id: status
 
   email_score:
-    run: score_email.cwl
+    run: steps/score_email.cwl
     in:
       - id: submissionid
         source: "#get_submissionid/submissionid"
@@ -395,7 +395,7 @@ steps:
     out: [finished]
 
   update_main_submission_status_with_score:
-    run: update_status.cwl
+    run: steps/update_status.cwl
     in:
       - id: submissionid
         source: "#get_submissionid/submissionid"

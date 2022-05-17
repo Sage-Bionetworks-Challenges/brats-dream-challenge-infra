@@ -70,7 +70,7 @@ steps:
       - id: filepath
 
   validate:
-    run: validate.cwl
+    run: steps/validate.cwl
     in:
       - id: input_file
         source: "#download_submission/filepath"
@@ -126,7 +126,7 @@ steps:
     out: [finished]
 
   score:
-    run: score.cwl
+    run: steps/score.cwl
     in:
       - id: parent_id
         source: "#submitterUploadSynId"
@@ -143,7 +143,7 @@ steps:
       - id: status
       
   email_score:
-    run: score_email.cwl
+    run: steps/score_email.cwl
     in:
       - id: submissionid
         source: "#submissionId"

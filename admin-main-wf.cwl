@@ -32,7 +32,7 @@ outputs: []
 
 steps:
   create_adminsynid_json:
-    run: create_annotations.cwl
+    run: steps/create_annotations.cwl
     in:
       - id: admin_synid
         source: "#adminUploadSynId"
@@ -151,7 +151,7 @@ steps:
     out: [finished]
 
   create_submission_file:
-    run: create_submission_file.cwl
+    run: steps/create_submission_file.cwl
     in:
       - id: submissionid
         source: "#submissionId"
@@ -180,7 +180,7 @@ steps:
 
   # Add tool to determine which queue to submit to
   determine_internal_queue:
-    run: determine_queue.cwl
+    run: steps/determine_queue.cwl
     in:
       - id: synapse_config
         source: "#synapseConfig"
