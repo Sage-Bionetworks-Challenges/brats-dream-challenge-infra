@@ -11,7 +11,7 @@ inputs:
     type: int
   - id: synapse_config
     type: File
-  - id: results
+  - id: model
     type: File
   - id: private_annotations
     type: string[]?
@@ -22,7 +22,7 @@ arguments:
     prefix: -s
   - valueFrom: $(inputs.synapse_config.path)
     prefix: -c
-  - valueFrom: $(inputs.results)
+  - valueFrom: $(inputs.model)
     prefix: -r
   - valueFrom: $(inputs.private_annotations)
     prefix: -p

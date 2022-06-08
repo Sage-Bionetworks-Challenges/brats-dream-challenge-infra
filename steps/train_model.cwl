@@ -4,7 +4,7 @@
 #
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: python3
+baseCommand: python
 
 inputs:
   - id: submissionid
@@ -27,10 +27,6 @@ inputs:
     type: string
   - id: docker_script
     type: File
-  - id: store
-    type: boolean?
-  - id: runtime_quota
-    type: int
 
 arguments: 
   - valueFrom: $(inputs.docker_script.path)
@@ -40,8 +36,6 @@ arguments:
     prefix: -p
   - valueFrom: $(inputs.docker_digest)
     prefix: -d
-  - valueFrom: $(inputs.store)
-    prefix: --store
   - valueFrom: $(inputs.status)
     prefix: --status
   - valueFrom: $(inputs.parentid)
@@ -50,8 +44,6 @@ arguments:
     prefix: -c
   - valueFrom: $(inputs.input_dir)
     prefix: -i
-  - valueFrom: $(inputs.runtime_quota)
-    prefix: -rt
 
 requirements:
   - class: InitialWorkDirRequirement
@@ -62,27 +54,15 @@ requirements:
           {"auths": {"$(inputs.docker_registry)": {"auth": "$(inputs.docker_authentication)"}}}
   - class: InlineJavascriptRequirement
 
-outputs:
-  - id: predictions
-    type: File?
-    outputBinding:
-      glob: predictions.tar.gz
 
-  - id: results
+
+outputs:
+  model:
     type: File
     outputBinding:
-      glob: results.json  
+      glob: model_files.tar.gz
   
-  - id: status
+  status:
     type: string
     outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['submission_status'])
-
-  - id: invalid_reasons
-    type: string
-    outputBinding:
-      glob: results.json
-      loadContents: true
-      outputEval: $(JSON.parse(self[0].contents)['submission_errors'])
+      outputEval: $("TRAINED")
