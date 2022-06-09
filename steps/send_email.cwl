@@ -13,41 +13,40 @@ inputs:
     type: File
   - id: model
     type: File
-  - id: private_annotations
-    type: string[]?
 
 arguments:
-  - valueFrom: score_email.py
+  - valueFrom: send_model_files.py
   - valueFrom: $(inputs.submissionid)
     prefix: -s
   - valueFrom: $(inputs.synapse_config.path)
     prefix: -c
-  - valueFrom: $(inputs.model)
+  - valueFrom: $(inputs.model.path)
     prefix: -r
-  - valueFrom: $(inputs.private_annotations)
-    prefix: -p
 
 
 requirements:
   - class: InlineJavascriptRequirement
   - class: InitialWorkDirRequirement
     listing:
-      - entryname: score_email.py
+      - entryname: send_model_files.py
         entry: |
           #!/usr/bin/env python
           import synapseclient
           import argparse
           import json
           import os
+
           parser = argparse.ArgumentParser()
           parser.add_argument("-s", "--submissionid", required=True, help="Submission ID")
           parser.add_argument("-c", "--synapse_config", required=True, help="credentials file")
-          parser.add_argument("-r", "--results", required=True, help="Resulting scores")
-          parser.add_argument("-p", "--private_annotations", nargs="+", default=[], help="annotations to not be sent via e-mail")
-
+          parser.add_argument("-r", "--model", required=True, help="Zipped model files")
           args = parser.parse_args()
+
           syn = synapseclient.Synapse(configPath=args.synapse_config)
           syn.login()
+          model_zip = synapseclient.File(args.model)
+          model_zip = syn.store(model_zip)
+          zip_id = model_zip.id
 
           sub = syn.getSubmission(args.submissionid)
           participantid = sub.get("teamId")
@@ -57,30 +56,15 @@ requirements:
             participantid = sub.userId
             name = syn.getUserProfile(participantid)['userName']
           evaluation = syn.getEvaluation(sub.evaluationId)
-          with open(args.results) as json_data:
-            annots = json.load(json_data)
-          if annots.get('submission_status') is None:
-            raise Exception("score.cwl must return submission_status as a json key")
-          status = annots['submission_status']
-          if status == "SCORED":
-              csv_id = annots['submission_scores']
-              del annots['submission_status']
-              del annots['submission_scores']
-              subject = "Submission to '%s' scored!" % evaluation.name
-              for annot in args.private_annotations:
-                del annots[annot]
-              if len(annots) == 0:
-                  message = "Your submission has been scored. Results will be announced at a later time."
-              else:
-                  message = ["Hello %s,\n\n" % name,
-                             "Your submission (id: %s) has been scored and below are the metric averages:\n\n" % sub.id,
-                             "\n".join([i + " : " + str(annots[i]) for i in annots]),
-                             "\nTo look at each scan's score, go here: https://www.synapse.org/#!Synapse:%s" %csv_id,
-                             "\n\nSincerely,\nChallenge Administrator"]
-              syn.sendMessage(
-                  userIds=[participantid],
-                  messageSubject=subject,
-                  messageBody="".join(message))
+          subject = "'%s' - Model Training Complete" % evaluation.name
+          message = ["Hello %s,\n\n" % name,
+                     "Congrats! Your submission (id: %s) has finished training.\n\n" % sub.id,
+                     "To access your model files, go here: https://www.synapse.org/#!Synapse:%s" %zip_id,
+                     "\n\nSincerely,\nBraTS Challenge Organizers"]
+          syn.sendMessage(
+              userIds=[participantid],
+              messageSubject=subject,
+              messageBody="".join(message))
           
 outputs:
 - id: finished

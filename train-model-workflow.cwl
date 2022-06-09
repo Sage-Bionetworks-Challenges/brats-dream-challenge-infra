@@ -38,7 +38,6 @@ steps:
     in:
       - id: entityid
         source: "#submitterUploadSynId"
-      # TODO: replace `valueFrom` with the admin user ID or admin team ID
       - id: principalid
         valueFrom: "3427583"
       - id: permissions
@@ -52,7 +51,6 @@ steps:
     in:
       - id: entityid
         source: "#adminUploadSynId"
-      # TODO: replace `valueFrom` with the admin user ID or admin team ID
       - id: principalid
         valueFrom: "3427583"
       - id: permissions
@@ -134,7 +132,7 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
       - id: input_dir
-        valueFrom: "uw_omop_validation_training"
+        valueFrom: "BraTS_training"
       - id: docker_script
         default:
           class: File
