@@ -2,16 +2,15 @@
 from __future__ import print_function
 import argparse
 from functools import partial
-import getpass
-import json
 import os
+import sys
+import json
 import signal
 import subprocess
-import sys
 import time
 
-import docker
 import synapseclient
+import docker
 
 
 def create_log_file(log_filename, log_text=None):
@@ -84,21 +83,17 @@ def main(syn, args):
 
     # These are the volumes that you want to mount onto your docker container
     # directory = "/data/common/DREAM Challenge/data/submissions"
-    scratch_dir = os.path.join(os.getcwd(), "scratch")
     model_dir = os.path.join(os.getcwd(), "model")
-    output_dir = os.path.join(os.getcwd(), "output")
     input_dir = args.input_dir
 
     print("mounting volumes")
     # These are the locations on the docker that you want your mounted
     # volumes to be + permissions in docker (ro, rw)
     # It has to be in this format '/output:rw'
-    mounted_volumes = {scratch_dir: '/scratch:z',
-                       input_dir: '/train:ro',
-                       model_dir: '/model:z',
-                       output_dir: '/output:z'}
+    mounted_volumes = {input_dir: '/train:ro',
+                       model_dir: '/model:z'}
     # All mounted volumes here in a list
-    all_volumes = [scratch_dir, input_dir, model_dir, output_dir]
+    all_volumes = [input_dir, model_dir]
     # Mount volumes
     volumes = {}
     for vol in all_volumes:
@@ -118,18 +113,23 @@ def main(syn, args):
                 container = cont
     # If the container doesn't exist, make sure to run the docker image
     if container is None:
-        # Run as detached, logs will stream below
-        print("running container")
+        # Run the Docker container in detached mode and with access
+        # to the GPU, also making note of the start time.
+        #container_name = f"{args.submissionid}_case{case_id}"
         try:
             container = client.containers.run(docker_image,
-                                              'bash /app/train.sh',
-                                              detach=True, volumes=volumes,
+                                              detach=True,
+                                              volumes=volumes,
                                               name=args.submissionid,
                                               network_disabled=True,
-                                              mem_limit='300g', stderr=True)
+                                              stderr=True,
+                                              runtime="nvidia")
         except docker.errors.APIError as err:
+            container = None
             remove_docker_container(args.submissionid)
             errors = str(err) + "\n"
+        else:
+            errors = ""
 
     print("creating logfile")
     # Create the logfile
@@ -188,25 +188,7 @@ def main(syn, args):
         #raise Exception("No model generated, please check training docker")
 
     tar(model_dir, 'model_files.tar.gz')
-
-    # Gather scratch directory
-    list_scratch = os.listdir(scratch_dir)
-    if not list_scratch:
-        scratch_fill = os.path.join(scratch_dir, "scratch_fill.txt")
-        open(scratch_fill, 'w').close()
-
-    tar(scratch_dir, 'scratch_files.tar.gz')
-
-    # Gather output directory
-    list_output = os.listdir(output_dir)
-    if not list_output:
-        output_fill = os.path.join(output_dir, "output_fill.txt")
-        open(output_fill, 'w').close()
-
-    subprocess.check_call(["docker", "cp", output_dir + "/",
-                           "logging:/logs/" + str(args.submissionid) + "/" + "training_output/"])
-
-    tar(output_dir, 'output_files.tar.gz')
+    
 
 
 def quitting(signo, _frame, submissionid=None, docker_image=None,
