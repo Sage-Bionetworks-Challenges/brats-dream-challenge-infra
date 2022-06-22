@@ -132,7 +132,7 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
       - id: input_dir
-        valueFrom: "BraTS_training"
+        valueFrom: "/home/ec2-user/BraTS_training"
       - id: docker_script
         default:
           class: File
@@ -150,4 +150,6 @@ steps:
         source: "#synapseConfig"
       - id: model
         source: "#train_model/model"
+      - id: parentid
+        source: "#submitterUploadSynId"
     out: []
