@@ -111,12 +111,11 @@ def main(syn, args):
     print("creating logfile")
     log_filename = args.submissionid + "_log.txt"
     open(log_filename, 'w').close()
-    warnings = []
 
     # Get Docker image to run and volumes to be mounted.
     docker_image = args.docker_repository + "@" + args.docker_digest
     output_dir = os.getcwd()
-    input_dir = args.input_dir
+    # input_dir = args.input_dir
 
     # Pull Docker image so that the process is not included in the
     # time limit.
@@ -152,11 +151,9 @@ def main(syn, args):
                             'mode': mounted_volumes[vol].split(":")[1]}
 
         # Run the Docker container in detached mode and with access
-        # to the GPU, also making note of the start time.
+        # to the GPU.
         container_name = f"{args.submissionid}_case{case_id}"
         print(f"running container: {container_name}")
-        start_time = time.time()
-        time_elapsed = 0
         try:
             container = client.containers.run(docker_image,
                                               detach=True,
@@ -172,32 +169,14 @@ def main(syn, args):
         else:
             errors = ""
 
-        # If container is running, monitor the time elapsed -- if it
-        # exceeds the runtime quota, stop the container. Logs should
-        # also be captured every 60 seconds.  Remove the container
+        # Capture logs every 60 seconds. Remove the container when done.
         if container is not None:
             while container in client.containers.list():
-                time_elapsed = time.time() - start_time
-                if time_elapsed > args.runtime_quota:
-                    container.stop()
-                    break
-
                 log_text = container.logs()
                 create_log_file(log_filename, log_text=log_text)
                 store_log_file(syn, log_filename,
                                args.parentid, store=args.store)
                 time.sleep(60)
-
-            # Note the reason for container exit in the logs if time
-            # limit is reached.
-            if time_elapsed > args.runtime_quota:
-                # TODO: uncomment for testing data
-                # warnings.append(f"Time limit of {args.runtime_quota}s reached "
-                #                 f"for case {case_id} - no output generated.")
-                warnings.append(f"Time limit of {args.runtime_quota}s reached "
-                                f"for case {case_id} - stopping submission...")
-                container.remove()
-                break
 
             # Must run again to make sure all the logs are captured
             log_text = container.logs()
@@ -211,11 +190,6 @@ def main(syn, args):
             create_log_file(log_filename, log_text=errors)
             store_log_file(syn, log_filename,
                            args.parentid, store=args.store)
-    if warnings:
-        warnings_text = "\n\nWarnings:\n=========\n" + "\n".join(warnings)
-        create_log_file(log_filename, log_text=warnings_text, mode="a")
-        store_log_file(syn, log_filename,
-                       args.parentid, store=args.store)
 
     print("finished inference")
     remove_docker_image(docker_image)
@@ -257,8 +231,6 @@ if __name__ == '__main__':
                         help="Input Directory")
     parser.add_argument("-c", "--synapse_config", required=True,
                         help="credentials file")
-    parser.add_argument("-rt", "--runtime_quota",
-                        help="runtime quota in seconds", type=int)
     parser.add_argument("--store", action='store_true',
                         help="to store logs")
     parser.add_argument("--parentid", required=True,

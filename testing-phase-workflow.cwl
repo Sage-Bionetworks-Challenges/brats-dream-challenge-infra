@@ -132,8 +132,6 @@ steps:
         default:
           class: File
           location: "run_docker.py"
-      - id: runtime_quota
-        default: 390
       - id: store
         default: true
     out:
