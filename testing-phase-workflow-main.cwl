@@ -60,7 +60,7 @@ steps:
       - id: entityid
         source: "#adminUploadSynId"
       - id: principalid
-        valueFrom: "3427583"  # Change this
+        valueFrom: "3427583"
       - id: permissions
         valueFrom: "download"
       - id: synapse_config
@@ -74,7 +74,7 @@ steps:
       - id: entityid
         source: "#submitterUploadSynId"
       - id: principalid
-        valueFrom: "3427583"  # Change this
+        valueFrom: "3427583"
       - id: permissions
         valueFrom: "download"
       - id: synapse_config
@@ -185,7 +185,7 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
       - id: submission_viewid
-        valueFrom: "syn26125000"
+        valueFrom: "syn33552360"
     out:
       - id: submit_to_queue
 
