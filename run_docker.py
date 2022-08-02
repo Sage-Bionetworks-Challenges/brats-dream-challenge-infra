@@ -207,8 +207,7 @@ def main(syn, args):
         status = "INVALID"
         invalid_reasons = (
             "No *.nii.gz files found; please check whether running the "
-            "Docker container locally will result in a NIfTI file within "
-            "the time constaint."
+            "Docker container locally will result in a NIfTI file."
         )
     with open("results.json", "w") as out:
         out.write(json.dumps(
