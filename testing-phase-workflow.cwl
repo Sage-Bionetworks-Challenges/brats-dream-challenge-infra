@@ -1,34 +1,34 @@
 #!/usr/bin/env cwl-runner
-#
-# Internal workflow.  DOCKER SUBMISSION PHASE.
-# (9/1/2021 - 9/15/2021)
-#
-# Inputs:
-#   submissionId: ID of the Synapse submission to process
-#   adminUploadSynId: ID of a folder accessible only to the submission queue administrator
-#   submitterUploadSynId: ID of a folder accessible to the submitter
-#   workflowSynapseId:  ID of the Synapse entity containing a reference to the workflow file(s)
-#
+
 cwlVersion: v1.0
 class: Workflow
+label: BraTS Evaluation - Segmentation Files
+doc: |
+  This workflow will run and evaluate a Docker submission to the BraTS
+  Continuous Evaluation challenge (syn27046444). Metrics calculated
+  are: Dice, Hausdorff95, Sensitivity, Specificity, Precision.
 
 requirements:
-  - class: StepInputExpressionRequirement
+- class: StepInputExpressionRequirement
 
 inputs:
-  - id: submissionId
+  adminUploadSynId:
+    label: Synapse Folder ID accessible by an admin
+    type: string
+  submissionId:
+    label: Submission ID
     type: int
-  - id: adminUploadSynId
+  submitterUploadSynId:
+    label: Synapse Folder ID accessible by the submitter
     type: string
-  - id: submitterUploadSynId
-    type: string
-  - id: workflowSynapseId
-    type: string
-  - id: synapseConfig
+  synapseConfig:
+    label: filepath to .synapseConfig file
     type: File
+  workflowSynapseId:
+    label: Synapse File ID that links to the workflow
+    type: string
 
-# there are no output at the workflow engine level.  Everything is uploaded to Synapse
-outputs: []
+outputs: {}
 
 steps:
 
@@ -61,7 +61,7 @@ steps:
     run: https://raw.githubusercontent.com/Sage-Bionetworks-Workflows/dockstore-tool-synapse/v0.2/cwl/synapse-get-tool.cwl
     in:
       - id: synapseid
-        valueFrom: "syn26017031"
+        valueFrom: "syn33924333"
       - id: synapse_config
         source: "#synapseConfig"
     out:
@@ -117,7 +117,6 @@ steps:
         source: "#submissionId"
       - id: docker_registry
         source: "#get_docker_config/docker_registry"
-        # valueFrom: "docker.synapse.org"
       - id: docker_authentication
         source: "#get_docker_config/docker_authentication"
       - id: parentid
@@ -127,7 +126,7 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
       - id: input_dir
-        valueFrom: "/home/ec2-user/RSNA_ASNR_MICCAI_BraTS2021_ValidationData_5Cases"
+        valueFrom: "/home/ec2-user/BraTS_Continuous_Evaluation_TestingGT_08022022"
       - id: docker_script
         default:
           class: File
