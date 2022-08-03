@@ -8,7 +8,7 @@ baseCommand: validate.py
 
 hints:
   DockerRequirement:
-    dockerPull: docker.synapse.org/syn25829070/scoring:v6
+    dockerPull: docker.synapse.org/syn27046445/scoring:test-phase
 
 inputs:
   - id: input_file
