@@ -1,34 +1,33 @@
 #!/usr/bin/env cwl-runner
-#
-# Main workflow.  Runs through synthetic data and submits to internal queues
-#
-# Inputs:
-#   submissionId: ID of the Synapse submission to process
-#   adminUploadSynId: ID of a folder accessible only to the submission queue administrator
-#   submitterUploadSynId: ID of a folder accessible to the submitter
-#   workflowSynapseId:  ID of the Synapse entity containing a reference to the workflow file(s)
-#
+
 cwlVersion: v1.0
 class: Workflow
+label: BraTS Evaluation - Segmentation Files
+doc: |
+  This workflow will check whether a submission is a valid Docker image. If
+  valid, submission will be submitted to an open internal queue.
 
 requirements:
-  - class: StepInputExpressionRequirement
-  - class: ScatterFeatureRequirement
+- class: StepInputExpressionRequirement
 
 inputs:
-  - id: submissionId
+  adminUploadSynId:
+    label: Synapse Folder ID accessible by an admin
+    type: string
+  submissionId:
+    label: Submission ID
     type: int
-  - id: adminUploadSynId
+  submitterUploadSynId:
+    label: Synapse Folder ID accessible by the submitter
     type: string
-  - id: submitterUploadSynId
-    type: string
-  - id: workflowSynapseId
-    type: string
-  - id: synapseConfig
+  synapseConfig:
+    label: filepath to .synapseConfig file
     type: File
+  workflowSynapseId:
+    label: Synapse File ID that links to the workflow
+    type: string
 
-# there are no output at the workflow engine level.  Everything is uploaded to Synapse
-outputs: []
+outputs: {}
 
 steps:
   create_adminsynid_json:
@@ -47,7 +46,7 @@ steps:
         source: "#create_adminsynid_json/json_out"
       - id: to_public
         default: true
-      - id: force_change_annotation_acl
+      - id: force
         default: true
       - id: synapse_config
         source: "#synapseConfig"
