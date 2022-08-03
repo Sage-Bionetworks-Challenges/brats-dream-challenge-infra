@@ -184,7 +184,7 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
       - id: submission_viewid
-        valueFrom: "syn33552360"
+        valueFrom: "syn34006722"
     out:
       - id: submit_to_queue
 
