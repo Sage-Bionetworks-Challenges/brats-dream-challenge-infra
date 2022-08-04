@@ -50,11 +50,11 @@ def validate_file_format(preds, parent):
     return error
 
 
-def validate_filenames(preds, golds):
+def validate_filenames(preds, golds, prefix=""):
     """Check that every NIfTI filename ends with a case ID."""
     error = []
 
-    case_ids = [pred[-12:-7] for pred in preds]
+    case_ids = [pred[-12:-7] for pred in preds if pred.startswith(prefix)]
     if all(case_id.isdigit() for case_id in case_ids):
 
         # Check that all case IDs are unique.
@@ -66,7 +66,7 @@ def validate_filenames(preds, golds):
         unknown_ids = set(case_ids) - gold_case_ids
         if unknown_ids:
             error.append(
-                f"Unknown case IDs found: {', '.join(sorted(unknown_ids))}")
+                f"Unknown {prefix} case IDs found: {', '.join(sorted(unknown_ids))}")
     else:
         error = [("Not all filenames in the archive end with a case "
                   "ID (*{5-digit ID}.nii.gz).")]
@@ -89,7 +89,8 @@ def main():
         golds = utils.unzip_file(args.goldstandard_file)
         if preds:
             invalid_reasons.extend(validate_file_format(preds, args.tmp_dir))
-            invalid_reasons.extend(validate_filenames(preds, golds))
+            invalid_reasons.extend(validate_filenames(preds, golds, prefix="BraTS2021"))
+            invalid_reasons.extend(validate_filenames(preds, golds, prefix="BraTS_SSA"))
         else:
             invalid_reasons.append(
                 "Submission must be a tarball or zipped archive "
