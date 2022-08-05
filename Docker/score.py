@@ -31,6 +31,8 @@ def get_args():
                         type=str, default="/goldstandard.zip")
     parser.add_argument("-o", "--output",
                         type=str, default="results.json")
+    parser.add_argument("-d", "--dataset",
+                        type=str, default="BraTS2021")
     parser.add_argument("-c", "--captk_path",
                         type=str, default="/work/CaPTk")
     return parser.parse_args()
@@ -77,9 +79,7 @@ def extract_metrics(tmp, scan_id, prefix):
 def score(parent, pred_lst, captk_path, dataset="BraTS2021", tmp_output="tmp.csv"):
     """Compute and return scores for each scan."""
     scores = []
-    filtered_preds = [f for f in pred_lst
-                      if os.path.split(f)[1].startswith(dataset)]
-    for pred in filtered_preds:
+    for pred in pred_lst:
         scan_id = pred[-12:-7]
         gold = os.path.join(parent, f"{dataset}_{scan_id}_seg.nii.gz")
         try:
@@ -105,7 +105,15 @@ def score(parent, pred_lst, captk_path, dataset="BraTS2021", tmp_output="tmp.csv
     return pd.concat(scores).sort_values(by="scan_id")
 
 
-def compile_and_upload(syn, parent, results, prefix=""):
+def main():
+    """Main function."""
+    args = get_args()
+    preds = utils.unzip_file(args.predictions_file)
+    golds = utils.unzip_file(args.goldstandard_file)
+
+    dir_name = os.path.split(golds[0])[0]
+    results = score(dir_name, preds, args.captk_path, dataset=args.dataset)
+
     # Get number of segmentations predicted by participant, number of
     # segmentation that could not be scored, and number of segmentations
     # that were scored.
@@ -121,37 +129,18 @@ def compile_and_upload(syn, parent, results, prefix=""):
     results.loc["75quantile"] = results.quantile(q=0.75)
 
     # CSV file of scores for all scans.
-    filename = f"{prefix}all_scores.csv"
-    results.to_csv(filename)
-    csv = synapseclient.File(filename, parent=parent)
-    csv = syn.store(csv)
-    return {
-        f"{prefix}cases_evaluated": cases_evaluated,
-        f"{prefix}submission_scores": csv.id
-    }
-
-
-def main():
-    """Main function."""
-    args = get_args()
-    preds = utils.unzip_file(args.predictions_file)
-    golds = utils.unzip_file(args.goldstandard_file)
-    dir_name = os.path.split(golds[0])[0]
-
-    scores = score(dir_name, preds, args.captk_path)
-    ssa_scores = score(dir_name, preds, args.captk_path, dataset="BraTS_SSA")
-
+    results.to_csv("all_scores.csv")
     syn = synapseclient.Synapse(configPath=args.synapse_config)
     syn.login(silent=True)
-    results = compile_and_upload(syn, args.parent_id, scores)
-    ssa_results = compile_and_upload(syn, args.parent_id,
-                                     ssa_scores, prefix="ssa_")
+    csv = synapseclient.File("all_scores.csv", parent=args.parent_id)
+    csv = syn.store(csv)
 
     # Results file for annotations.
     with open(args.output, "w") as out:
-        res_dict = {  # **results.loc["mean"].to_dict(),
-            **results, **ssa_results,
-            "submission_status": "SCORED"}
+        res_dict = {**results.loc["mean"].to_dict(),
+                    "cases_evaluated": cases_evaluated,
+                    "submission_scores": csv.id,
+                    "submission_status": "SCORED"}
         res_dict = {k: v for k, v in res_dict.items() if not pd.isna(v)}
         out.write(json.dumps(res_dict))
 
