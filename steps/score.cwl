@@ -19,6 +19,8 @@ inputs:
     type: File
   - id: goldstandard
     type: File
+  - id: dataset
+    type: string
   - id: check_validation_finished
     type: boolean?
 
@@ -31,6 +33,8 @@ arguments:
     prefix: -p
   - valueFrom: $(inputs.goldstandard.path)
     prefix: -g
+  - valueFrom: $(inputs.dataset)
+    prefix: -d
   - valueFrom: "/work/CaPTk"
     prefix: -c
   - valueFrom: results.json

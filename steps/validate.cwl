@@ -17,6 +17,8 @@ inputs:
     type: File
   - id: entity_type
     type: string
+  - id: dataset
+    type: string
 
 arguments:
   - valueFrom: $(inputs.input_file)
@@ -25,6 +27,8 @@ arguments:
     prefix: -g
   - valueFrom: $(inputs.entity_type)
     prefix: -e
+  - valueFrom: $(inputs.dataset)
+    prefix: -d
   - valueFrom: results.json
     prefix: -o
 

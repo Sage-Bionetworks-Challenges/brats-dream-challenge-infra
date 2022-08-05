@@ -252,6 +252,8 @@ steps:
         source: "#download_goldstandard/filepath"
       - id: entity_type
         valueFrom: "FileEntity"
+      - id: dataset
+        valueFrom: "BraTS2021"
     out:
       - id: results
       - id: status
@@ -339,6 +341,8 @@ steps:
         source: "#run_docker/predictions"
       - id: goldstandard
         source: "#download_goldstandard/filepath"
+      - id: dataset
+        valueFrom: "BraTS2021"
       - id: check_validation_finished
         source: "#check_status/finished"
     out:
