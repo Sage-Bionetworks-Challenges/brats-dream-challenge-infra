@@ -23,6 +23,8 @@ def get_args():
                         type=str, required=True)
     parser.add_argument("-t", "--tmp_dir",
                         type=str, default="tmpdir")
+    parser.add_argument("-d", "--dataset",
+                        type=str, default="BraTS2021")
     parser.add_argument("-o", "--output", type=str)
     return parser.parse_args()
 
@@ -54,7 +56,7 @@ def validate_filenames(preds, golds, prefix=""):
     """Check that every NIfTI filename ends with a case ID."""
     error = []
 
-    case_ids = [pred[-12:-7] for pred in preds if pred.startswith(prefix)]
+    case_ids = [pred[-12:-7] for pred in preds]
     if all(case_id.isdigit() for case_id in case_ids):
 
         # Check that all case IDs are unique.
@@ -62,7 +64,8 @@ def validate_filenames(preds, golds, prefix=""):
             error.append("Duplicate predictions found for one or more cases.")
 
         # Check that case IDs are known (e.g. has corresponding gold file).
-        gold_case_ids = {gold[-16:-11] for gold in golds}
+        gold_case_ids = {gold[-16:-11]
+                         for gold in golds if os.path.split(gold)[1].startswith(prefix)}
         unknown_ids = set(case_ids) - gold_case_ids
         if unknown_ids:
             error.append(
@@ -90,9 +93,7 @@ def main():
         if preds:
             invalid_reasons.extend(validate_file_format(preds, args.tmp_dir))
             invalid_reasons.extend(validate_filenames(preds, golds,
-                                                      prefix="BraTS2021"))
-            invalid_reasons.extend(validate_filenames(preds, golds,
-                                                      prefix="BraTS_SSA"))
+                                                      prefix=args.dataset))
         else:
             invalid_reasons.append(
                 "Submission must be a tarball or zipped archive "
