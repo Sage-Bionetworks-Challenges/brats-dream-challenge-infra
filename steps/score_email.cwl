@@ -64,10 +64,8 @@ requirements:
           status = annots['submission_status']
           if status == "SCORED":
               csv_id = annots['submission_scores']
-              ssa_csv_id = annots['ssa_submission_scores']
               del annots['submission_status']
               del annots['submission_scores']
-              del annots['ssa_submission_scores']
               subject = "Submission to '%s' scored!" % evaluation.name
               for annot in args.private_annotations:
                 del annots[annot]
@@ -78,7 +76,6 @@ requirements:
                              "Your submission (id: %s) has been scored and below are the metric averages:\n\n" % sub.id,
                              "\n".join([i + " : " + str(annots[i]) for i in annots]),
                              "\nTo look at each scan's score, go here: https://www.synapse.org/#!Synapse:%s" % csv_id,
-                             " and here: https://www.synapse.org/#!Synapse:%s" % ssa_csv_id
                              "\n\nSincerely,\nChallenge Administrator"]
               syn.sendMessage(
                   userIds=[participantid],
