@@ -253,7 +253,7 @@ steps:
       - id: entity_type
         valueFrom: "FileEntity"
       - id: dataset
-        valueFrom: "BraTS2021"
+        valueFrom: "BraTS_SSA"
     out:
       - id: results
       - id: status
@@ -342,7 +342,7 @@ steps:
       - id: goldstandard
         source: "#download_goldstandard/filepath"
       - id: dataset
-        valueFrom: "BraTS2021"
+        valueFrom: "BraTS_SSA"
       - id: check_validation_finished
         source: "#check_status/finished"
     out:
