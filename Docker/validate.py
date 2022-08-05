@@ -89,10 +89,10 @@ def main():
         golds = utils.unzip_file(args.goldstandard_file)
         if preds:
             invalid_reasons.extend(validate_file_format(preds, args.tmp_dir))
-            invalid_reasons.extend(validate_filenames(
-                preds, golds, prefix="BraTS2021"))
-            invalid_reasons.extend(validate_filenames(
-                preds, golds, prefix="BraTS_SSA"))
+            invalid_reasons.extend(validate_filenames(preds, golds,
+                                                      prefix="BraTS2021"))
+            invalid_reasons.extend(validate_filenames(preds, golds,
+                                                      prefix="BraTS_SSA"))
         else:
             invalid_reasons.append(
                 "Submission must be a tarball or zipped archive "
