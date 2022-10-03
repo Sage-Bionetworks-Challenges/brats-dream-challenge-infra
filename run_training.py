@@ -90,7 +90,7 @@ def main(syn, args):
     # These are the locations on the docker that you want your mounted
     # volumes to be + permissions in docker (ro, rw)
     # It has to be in this format '/output:rw'
-    mounted_volumes = {input_dir: '/train:ro',
+    mounted_volumes = {input_dir: '/input:ro',
                        model_dir: '/model:z'}
     # All mounted volumes here in a list
     all_volumes = [input_dir, model_dir]
