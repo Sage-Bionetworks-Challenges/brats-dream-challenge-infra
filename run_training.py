@@ -1,41 +1,40 @@
-"""Run training docker models"""
+"""Run training synthetic docker models"""
 from __future__ import print_function
 import argparse
-from functools import partial
+import getpass
 import os
-import sys
-import json
-import signal
-import subprocess
+import tarfile
 import time
+import glob
+import json
 
-import synapseclient
 import docker
+import synapseclient
 
 
-def create_log_file(log_filename, log_text=None):
+def create_log_file(log_filename, log_text=None, mode="w"):
     """Create log file"""
-    with open(log_filename, 'w') as log_file:
+    print(log_text)
+    with open(log_filename, mode) as log_file:
         if log_text is not None:
             if isinstance(log_text, bytes):
-                log_text = log_text.decode('utf-8')
+                log_text = log_text.decode("utf-8")
             log_file.write(log_text.encode("ascii", "ignore").decode("ascii"))
         else:
             log_file.write("No Logs")
 
 
-def store_log_file(syn, log_filename, parentid, test=False):
+def store_log_file(syn, log_filename, parentid, store=True):
     """Store log file"""
     statinfo = os.stat(log_filename)
-    if statinfo.st_size > 0:
+    print(f"storing logs: {statinfo.st_size}")
+    if statinfo.st_size > 0 and statinfo.st_size/1000.0 <= 50:
         ent = synapseclient.File(log_filename, parent=parentid)
-        # Don't store if test
-        if not test:
+        if store:
             try:
                 syn.store(ent)
             except synapseclient.core.exceptions.SynapseHTTPError as err:
-                # print(err)
-                print("error with storing log file")
+                print(err)
 
 
 def remove_docker_container(container_name):
@@ -49,6 +48,15 @@ def remove_docker_container(container_name):
         print("Unable to remove container")
 
 
+def pull_docker_image(image_name):
+    """Pull docker image"""
+    client = docker.from_env()
+    try:
+        client.images.pull(image_name)
+    except docker.errors.APIError:
+        print("Unable to pull image")
+
+
 def remove_docker_image(image_name):
     """Remove docker image"""
     client = docker.from_env()
@@ -59,144 +67,121 @@ def remove_docker_image(image_name):
 
 
 def tar(directory, tar_filename):
-    """Tar all files in a directory and remove the files
+    """Tar all files in a directory
     Args:
         directory: Directory path to files to tar
-        tar_filename:  Name of tar file
+        tar_filename:  tar file path
     """
-    tar_command = ['tar', '-C', directory, '--remove-files', '.', '-cvzf',
-                   tar_filename]
-    subprocess.check_call(tar_command)
+    with tarfile.open(tar_filename, "w") as tar_o:
+        tar_o.add(directory)
+
+
+def untar(directory, tar_filename):
+    """Untar a tar file into a directory
+    Args:
+        directory: Path to directory to untar files
+        tar_filename:  tar file path
+    """
+    with tarfile.open(tar_filename, "r") as tar_o:
+        tar_o.extractall(path=directory)
 
 
 def main(syn, args):
+    """Run docker model"""
     if args.status == "INVALID":
         raise Exception("Docker image is invalid")
 
-    client = docker.from_env()
-    api_client = docker.APIClient(base_url='unix://var/run/docker.sock')
+    # The new toil version doesn't seem to pull the docker config file from
+    # .docker/config.json...
+    # client = docker.from_env()
+    client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+    config = synapseclient.Synapse().getConfigFile(
+        configPath=args.synapse_config
+    )
+    authen = dict(config.items("authentication"))
+    client.login(username=authen['username'],
+                 password=authen['password'],
+                 registry="https://docker.synapse.org")
 
-    # print(getpass.getuser())
+    print(getpass.getuser())
 
-    # Add docker.config file
+    # Create a logfile to catch stdout/stderr from the Docker runs.
+    print("creating logfile")
+    log_filename = args.submissionid + "_log.txt"
+    open(log_filename, 'w').close()
+
+    # Get Docker image to run and volumes to be mounted.
     docker_image = args.docker_repository + "@" + args.docker_digest
 
-    # These are the volumes that you want to mount onto your docker container
-    # directory = "/data/common/DREAM Challenge/data/submissions"
-    model_dir = os.path.join(os.getcwd(), "model")
-    input_dir = args.input_dir
+    # Pull Docker image so that the process is not included in the
+    # time limit.
+    pull_docker_image(docker_image)
 
     print("mounting volumes")
-    # These are the locations on the docker that you want your mounted
-    # volumes to be + permissions in docker (ro, rw)
-    # It has to be in this format '/output:rw'
+    input_dir = args.input_dir
+    model_dir = os.path.join(os.getcwd(), "model")
     mounted_volumes = {input_dir: '/input:ro',
                        model_dir: '/model:z'}
-    # All mounted volumes here in a list
+
+    # Format the mounted volumes so that Docker SDK can understand.
     all_volumes = [input_dir, model_dir]
-    # Mount volumes
     volumes = {}
     for vol in all_volumes:
         volumes[vol] = {'bind': mounted_volumes[vol].split(":")[0],
                         'mode': mounted_volumes[vol].split(":")[1]}
 
-    # Look for if the container exists already, if so, reconnect
-    print("checking for containers")
-    container = None
-    errors = None
-    for cont in client.containers.list(all=True):
-        if args.submissionid in cont.name:
-            # Must remove container if the container wasn't killed properly
-            if cont.status == "exited":
-                cont.remove()
-            else:
-                container = cont
-    # If the container doesn't exist, make sure to run the docker image
-    if container is None:
-        # Run the Docker container in detached mode and with access
-        # to the GPU, also making note of the start time.
-        #container_name = f"{args.submissionid}_case{case_id}"
-        try:
-            container = client.containers.run(docker_image,
-                                              detach=True,
-                                              volumes=volumes,
-                                              name=args.submissionid,
-                                              network_disabled=True,
-                                              stderr=True,
-                                              runtime="nvidia")
-        except docker.errors.APIError as err:
-            container = None
-            remove_docker_container(args.submissionid)
-            errors = str(err) + "\n"
-        else:
-            errors = ""
+    # Run the Docker container in detached mode and with access
+    # to the GPU.
+    container_name = args.submissionid
+    try:
+        container = client.containers.run(docker_image,\
+                                          detach=True,
+                                          volumes=volumes,
+                                          name=container_name,
+                                          network_disabled=True,
+                                          stderr=True,
+                                          runtime="nvidia")
+    except docker.errors.APIError as err:
+        container = None
+        remove_docker_container(container_name)
+        errors = str(err) + "\n"
+    else:
+        errors = ""
 
-    print("creating logfile")
-    # Create the logfile
-    log_filename = args.submissionid + "_training_log.txt"
-    open(log_filename, 'w').close()
-    stats_log = str(args.submissionid) + "_training_stats_log.txt"
-    open(stats_log, 'w').close()
-    # If the container doesn't exist, there are no logs to write out and
-    # no container to remove
+    # Capture logs every 60 seconds. Remove the container when done.
     if container is not None:
-
-        # Check if container is still running
         while container in client.containers.list():
             log_text = container.logs(timestamps=True)
             create_log_file(log_filename, log_text=log_text)
-            store_log_file(syn, log_filename, args.parentid, test=True)
+            store_log_file(syn,
+                           log_filename,
+                           args.parentid)
             time.sleep(60)
+
         # Must run again to make sure all the logs are captured
-        log_text = container.logs()
+        log_text = container.logs(timestamps=True)
         create_log_file(log_filename, log_text=log_text)
-
-        store_log_file(syn, log_filename, args.parentid, test=True)
-        inspection = api_client.inspect_container(container.id)
-        inspection_path = str(args.submissionid) + "_training_inspection.txt"
-        with open(inspection_path, "w") as inspection_output:
-            json.dump(inspection, inspection_output, indent=4)
-
-        # Remove container and image after being done
+        store_log_file(syn,
+                       log_filename,
+                       args.parentid)
         container.remove()
 
     statinfo = os.stat(log_filename)
-    if statinfo.st_size == 0:
+    if statinfo.st_size == 0 and errors:
         create_log_file(log_filename, log_text=errors)
-        store_log_file(syn, log_filename, args.parentid, test=True)
+        store_log_file(syn,
+                       log_filename,
+                       args.parentid)
 
     print("finished training")
-    # Try to remove the image
     remove_docker_image(docker_image)
 
-    # Gather model directory
     list_model = os.listdir(model_dir)
     if not list_model:
         model_fill = os.path.join(model_dir, "model_fill.txt")
         open(model_fill, 'w').close()
-        #raise Exception("No model generated, please check training docker")
-
+        # raise Exception("No model generated, please check training docker")
     tar(model_dir, 'model_files.tar.gz')
-    
-
-
-def quitting(signo, _frame, submissionid=None, docker_image=None,
-             parentid=None, syn=None):
-    """When quit signal, stop docker container and delete image"""
-    print("Interrupted by %d, shutting down" % signo)
-    # Make sure to store logs and remove containers
-    try:
-        cont = client.containers.get(submissionid)
-        log_text = cont.logs()
-        log_filename = submissionid + "_training_log.txt"
-        create_log_file(log_filename, log_text=log_text)
-        store_log_file(syn, log_filename, args.parentid, test=True)
-        cont.stop()
-        cont.remove()
-    except Exception:
-        pass
-    remove_docker_image(docker_image)
-    sys.exit(0)
 
 
 if __name__ == '__main__':
@@ -215,16 +200,6 @@ if __name__ == '__main__':
                         help="Parent Id of submitter directory")
     parser.add_argument("--status", required=True, help="Docker image status")
     args = parser.parse_args()
-    client = docker.from_env()
     syn = synapseclient.Synapse(configPath=args.synapse_config)
-    syn.login()
-
-    docker_image = args.docker_repository + "@" + args.docker_digest
-
-    quit_sub = partial(quitting, submissionid=args.submissionid,
-                       docker_image=docker_image, parentid=args.parentid,
-                       syn=syn)
-    for sig in ('TERM', 'HUP', 'INT'):
-        signal.signal(getattr(signal, 'SIG'+sig), quit_sub)
-
+    syn.login(silent=True)
     main(syn, args)
