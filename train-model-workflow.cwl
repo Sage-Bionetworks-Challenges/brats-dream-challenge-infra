@@ -132,7 +132,7 @@ steps:
       - id: synapse_config
         source: "#synapseConfig"
       - id: input_dir
-        valueFrom: "/home/ec2-user/BraTS_training"
+        valueFrom: "/home/verena_chung/BraTS_training"
       - id: docker_script
         default:
           class: File
