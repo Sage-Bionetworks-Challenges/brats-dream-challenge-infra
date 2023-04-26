@@ -140,8 +140,7 @@ def main(syn, args):
     # If the container doesn't exist, there are no logs to write out and
     # no container to remove
     if container is not None:
-        logging_stats = "Time,Mem Usage,Perc Usage,Mem Limit\n"
-        stats_start = time.time()
+
         # Check if container is still running
         while container in client.containers.list():
             log_text = container.logs(timestamps=True)
@@ -152,21 +151,11 @@ def main(syn, args):
         log_text = container.logs()
         create_log_file(log_filename, log_text=log_text)
 
-        subprocess.check_call(["docker", "exec", "logging", "mkdir",
-                               "logs/" + str(args.submissionid)])
-        subprocess.check_call(["docker", "cp", os.path.abspath(log_filename),
-                               "logging:/logs/" + str(args.submissionid) + "/"])
-        # subprocess.check_call(["docker", "cp", os.path.abspath(stats_log),
-        #                        "logging:/logs/" + str(args.submissionid) + "/"])
-
         store_log_file(syn, log_filename, args.parentid, test=True)
         inspection = api_client.inspect_container(container.id)
         inspection_path = str(args.submissionid) + "_training_inspection.txt"
         with open(inspection_path, "w") as inspection_output:
             json.dump(inspection, inspection_output, indent=4)
-
-        subprocess.check_call(["docker", "cp", os.path.abspath(inspection_path),
-                               "logging:/logs/" + str(args.submissionid) + "/"])
 
         # Remove container and image after being done
         container.remove()
